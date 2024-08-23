@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.annotations.BatchSize;
+import org.hibernate.annotations.LazyGroup;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.NaturalIdCache;
 
@@ -19,6 +20,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
@@ -41,23 +43,30 @@ public class User implements Serializable{
     private boolean active;
     
     @NonNull
+    @LazyGroup("lazy_email_group") //remember bytecode enhancement
     @Basic(fetch = FetchType.LAZY)
     private String email;
+
+    @LazyGroup("lazy_email_group")
+    @Basic(fetch = FetchType.LAZY)
+    private boolean emailVerified;
 
     @NonNull
     @Basic(fetch=FetchType.LAZY)
     private String password;
    
-    
     @BatchSize(size = 10)
-    @ManyToMany
-    @Basic(optional=false,fetch=FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.LAZY)
     private Set<User> following = new HashSet<>();
 
     @BatchSize(size = 10)
-    @ManyToMany
-    @Basic(optional=false,fetch=FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.LAZY)
     private Set<User> followers = new HashSet<>();
+
+
+    @BatchSize(size = 10)
+    @OneToMany(fetch = FetchType.LAZY)
+    private Set<Tweet> tweets = new HashSet<>();
 
     @Column(name="created_at")
     private LocalDateTime createdAt;

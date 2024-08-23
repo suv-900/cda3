@@ -31,47 +31,52 @@ public class UserDaoImpl implements UserDao{
 
     private SessionFactory sessionFactory = HibernateBox.getSessionFactory();
 
-    @Transactional(
-        timeout = transaction_timeout,
-        isolation = Isolation.SERIALIZABLE
-        )
+    @Transactional(timeout = transaction_timeout)
     public void add(User user)throws Exception{
         try(Session session = sessionFactory.openSession()){
+            Transaction tc = session.beginTransaction();
+            
             session.persist(user);
+            
+            session.flush();
+            tc.commit();
         }catch(Exception e){
             throw e;
         }
     }
 
-    public void addUser(User user)throws RuntimeException{
-        Transaction tc = null;
+    // public void addUser(User user)throws RuntimeException{
+    //     Transaction tc = null;
 
-        //session.close() frees up connection
-        try(Session session = sessionFactory.openSession()){
-            tc = session.beginTransaction();
-            tc.setTimeout(transaction_timeout);
+    //     //session.close() frees up connection
+    //     try(Session session = sessionFactory.openSession()){
+    //         tc = session.beginTransaction();
+    //         tc.setTimeout(transaction_timeout);
             
-            //unit of work
-            session.persist(user);
+    //         //unit of work
+    //         session.persist(user);
 
-            //session.flush()generated sql statements.syncs state of 
-            //persistent context and db state
-            session.flush(); 
-            tc.commit();
-        }catch(RuntimeException e){
-            if(tc != null) tc.rollback();
-            // if(tc == null) throw new ErrorCreatingTransaction(e.getMessage());
+    //         //session.flush()generated sql statements.syncs state of 
+    //         //persistent context and db state
+    //         session.flush(); 
+    //         tc.commit();
+    //     }catch(RuntimeException e){
+    //         if(tc != null) tc.rollback();
+    //         // if(tc == null) throw new ErrorCreatingTransaction(e.getMessage());
              
-            throw e;  
-        }
-    }
+    //         throw e;  
+    //     }
+    // }
 
     public Optional<User> getByName(String username)throws Exception{
         Optional<User> user = Optional.empty();
         
         try(Session session = sessionFactory.openSession()){
+            
             user = session.byNaturalId(User.class)
             .using("username",username).loadOptional();
+
+            session.flush();
         }catch(Exception e){
             throw e;
         }
@@ -84,6 +89,8 @@ public class UserDaoImpl implements UserDao{
         
         try(Session session = sessionFactory.openSession()){
             obj = session.find(User.class,ID);
+
+            session.flush();
         }catch(Exception e){
             throw e;
         }
@@ -122,12 +129,14 @@ public class UserDaoImpl implements UserDao{
      * @return
      * @throws RuntimeException
      */
-    public boolean exists(User user)throws RuntimeException{
+    @Transactional(timeout = 5)
+     public boolean exists(User user)throws RuntimeException{
         boolean inPersistentContext = false;
         boolean inPersistentStore = false;
         
         try(Session session = sessionFactory.openSession()){
-           
+
+
             inPersistentContext = session.contains(user);
             
             if(!inPersistentContext){
@@ -200,6 +209,8 @@ public class UserDaoImpl implements UserDao{
         return userExists;
     }
 
+
+    @Transactional(timeout = 5)
     public User update(User user)throws Exception{
         User updatedUser = null;
         try(Session session = sessionFactory.openSession()){
@@ -208,7 +219,6 @@ public class UserDaoImpl implements UserDao{
             updatedUser = session.merge(user);
 
             session.flush();
-
             tc.commit();
         }catch(Exception e){
             throw e;
@@ -217,6 +227,7 @@ public class UserDaoImpl implements UserDao{
         return updatedUser;
     }    
 
+    @Transactional(timeout = 5)
     public void delete(User user)throws Exception{
         try(Session session = sessionFactory.openSession()){
             Transaction tc = session.beginTransaction();
@@ -224,7 +235,6 @@ public class UserDaoImpl implements UserDao{
             session.remove(user);
 
             session.flush();
-
             tc.commit();
         }catch(Exception e){
             throw e;
@@ -323,15 +333,16 @@ public class UserDaoImpl implements UserDao{
     }
 
     //merges 2 new objects with existing objects in the database
+    @Transactional(timeout = 5)
     public void addFollower(User owner,User follower)throws Exception{
         try(Session session = sessionFactory.openSession()){
             
             //2 update statements
             //batch update to 1 request
-            owner.getFollowers().add(follower);
+            owner.addFollower(follower);
             owner = session.merge(owner);
 
-            follower.getFollowing().add(owner);
+            follower.addFollowing(owner);
             follower = session.merge(follower);
 
         }catch(Exception e){
@@ -340,16 +351,37 @@ public class UserDaoImpl implements UserDao{
 
     }
 
-    public void removeFollower(User owner,User follower)throws Exception{
+    @Transactional(timeout = 5)
+    public void removeFollower(User owner,User follower)throws EntityNotFoundException{
+        
         try(Session session = sessionFactory.openSession()){
-            owner.getFollowers().remove(follower);
-            owner = session.merge(owner);
+            User user1 = session.byId(User.class).getReference(owner.getId());
+            user1.removeFollower(follower);
 
-            follower.getFollowing().remove(owner);
-            follower = session.merge(follower);
-        }catch(Exception e){
+            session.merge(user1);
+
+            User user2 = session.byId(User.class).getReference(follower.getId());
+            follower.addFollowing(owner);
+
+            session.merge(user2);
+
+            session.flush();
+
+        }catch(EntityNotFoundException e){
             throw e;
         }
-
     }
+    // @Transactional(timeout = 5)
+    // public void removeFollower(User owner,User follower)throws Exception{
+    //     try(Session session = sessionFactory.openSession()){
+    //         owner.removeFollower
+    //         owner = session.merge(owner);
+
+    //         follower.getFollowing().remove(owner);
+    //         follower = session.merge(follower);
+    //     }catch(Exception e){
+    //         throw e;
+    //     }
+
+    // }
 }

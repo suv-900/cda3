@@ -1,34 +1,57 @@
 package com.cuda.backend.entities;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.Set;
 
-import org.springframework.data.mongodb.core.mapping.Document;
-
+import jakarta.persistence.Basic;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.Setter;
-
 
 @Getter
 @Setter
-@Document("tweet")
+@Entity
 public class Tweet {
     @Id
-    private String id;   
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;   
     
+    @NonNull
     private String tweet;
 
-    private String authorHandle;
+    @NonNull
+    @OneToOne(fetch = FetchType.EAGER)
+    private User author;
 
-    private String imageLocation;
+    @Basic(fetch = FetchType.LAZY)
+    private Set<String> imageLocation = new HashSet<>();
 
-    private Long likes;
+    private long likes = 0;
 
-    private Set<Tweet> replies;
+    @Basic(fetch = FetchType.LAZY)
+    @OneToMany
+    private Set<Tweet> replies = new HashSet<>();
 
     private LocalDateTime createdAt;
 
+    @Basic(fetch = FetchType.LAZY)
     private LocalDateTime updatedAt;
     
+    synchronized public void increaseLikes(){
+        this.likes++;
+    }
+
+    synchronized public void decreaseLikes(){
+        this.likes--;
+    }
 }
+
+//two sessions holding the same object and tries to update counter;

@@ -1,8 +1,5 @@
 package com.cuda.backend.dao;
 
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -10,11 +7,9 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.cuda.backend.entities.User;
-import com.cuda.backend.exceptions.RecordNotFoundException;
 import com.cuda.backend.utilsbox.HibernateBox;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -353,7 +348,6 @@ public class UserDaoImpl implements UserDao{
 
     @Transactional(timeout = 5)
     public void removeFollower(User owner,User follower)throws EntityNotFoundException{
-        
         try(Session session = sessionFactory.openSession()){
             User user1 = session.byId(User.class).getReference(owner.getId());
             user1.removeFollower(follower);

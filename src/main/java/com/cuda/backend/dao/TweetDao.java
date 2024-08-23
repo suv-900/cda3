@@ -7,9 +7,7 @@ public interface TweetDao {
     
    Tweet view(Long tweetID)throws Exception;
 
-   Tweet view(Long tweetID,Long userID)throws Exception;
-   
-   Tweet update(Tweet tweet)throws Exception;
+   void update(Tweet tweet)throws Exception;
    
    void delete(Tweet tweet)throws Exception;
 

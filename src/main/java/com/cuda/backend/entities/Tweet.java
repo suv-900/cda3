@@ -27,14 +27,18 @@ public class Tweet {
     @NonNull
     private String tweet;
 
+    private long likes = 0;
+
+    private long viewCount = 0;
+
+    private Category category = Category.UNLISTED;
+
     @NonNull
     @OneToOne(fetch = FetchType.EAGER)
     private User author;
 
     @Basic(fetch = FetchType.LAZY)
     private Set<String> imageLocation = new HashSet<>();
-
-    private long likes = 0;
 
     @Basic(fetch = FetchType.LAZY)
     @OneToMany
@@ -45,13 +49,32 @@ public class Tweet {
     @Basic(fetch = FetchType.LAZY)
     private LocalDateTime updatedAt;
     
-    synchronized public void increaseLikes(){
+    public synchronized void increaseLikes(){
+        //lock acquire
         this.likes++;
+        //lock release
     }
 
-    synchronized public void decreaseLikes(){
+    public synchronized void decreaseLikes(){
         this.likes--;
+    }
+
+    public synchronized long getLikes(){
+        return this.likes;
+    }
+
+    public synchronized void increaseViewCount(){
+        this.viewCount++;
+    }
+
+    public synchronized void decreaseViewCount(){
+        this.viewCount--;
+    }
+
+    public synchronized long getViewCount(){
+        return this.viewCount;
     }
 }
 
 //two sessions holding the same object and tries to update counter;
+//monitor(lock) for every object so that only one thread is accessing at a time. 

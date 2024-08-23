@@ -1,0 +1,355 @@
+package com.cuda.backend.dao;
+
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.cuda.backend.entities.User;
+import com.cuda.backend.exceptions.RecordNotFoundException;
+import com.cuda.backend.utilsbox.HibernateBox;
+
+import jakarta.persistence.EntityNotFoundException;
+
+//using methods outside session or persistence context leads to
+//LazyInitialisationException
+
+//low level uses transactions or caches to get objects.
+//session for every request model
+//waste of 1 cache due to openning new sessions
+@Repository
+public class UserDaoImpl implements UserDao{
+    private final int transaction_timeout = 10;
+
+    private SessionFactory sessionFactory = HibernateBox.getSessionFactory();
+
+    @Transactional(
+        timeout = transaction_timeout,
+        isolation = Isolation.SERIALIZABLE
+        )
+    public void add(User user)throws Exception{
+        try(Session session = sessionFactory.openSession()){
+            session.persist(user);
+        }catch(Exception e){
+            throw e;
+        }
+    }
+
+    public void addUser(User user)throws RuntimeException{
+        Transaction tc = null;
+
+        //session.close() frees up connection
+        try(Session session = sessionFactory.openSession()){
+            tc = session.beginTransaction();
+            tc.setTimeout(transaction_timeout);
+            
+            //unit of work
+            session.persist(user);
+
+            //session.flush()generated sql statements.syncs state of 
+            //persistent context and db state
+            session.flush(); 
+            tc.commit();
+        }catch(RuntimeException e){
+            if(tc != null) tc.rollback();
+            // if(tc == null) throw new ErrorCreatingTransaction(e.getMessage());
+             
+            throw e;  
+        }
+    }
+
+    public Optional<User> getByName(String username)throws Exception{
+        Optional<User> user = Optional.empty();
+        
+        try(Session session = sessionFactory.openSession()){
+            user = session.byNaturalId(User.class)
+            .using("username",username).loadOptional();
+        }catch(Exception e){
+            throw e;
+        }
+
+        return user;
+    }
+
+    public Optional<User> getById(long ID)throws Exception{
+        User obj = null;
+        
+        try(Session session = sessionFactory.openSession()){
+            obj = session.find(User.class,ID);
+        }catch(Exception e){
+            throw e;
+        }
+
+        if(obj == null){
+            return Optional.empty();
+        }else{
+            return Optional.of(obj);
+        }
+    }
+    //proxy objects save a lot of memory
+    //either gets from 1 cache or from db
+    // @Transactional(timeout=transaction_timeout)
+    // public Optional<User> get(Long userID)throws Exception{
+    //     Optional<User> user = Optional.empty();
+    //     try(Session session = sessionFactory.openSession()){
+    //         user = session.byId(User.class).loadOptional(userID);
+    //     }catch(Exception e){
+    //         throw e;
+    //     }
+
+    //     return user;
+    // }
+    
+    
+
+    //writing sql only when necessary
+    //one session per request model
+    
+    
+    
+    
+    /**
+     * checks for duplicate entity in persistence context and in persistence store
+     * @param user
+     * @return
+     * @throws RuntimeException
+     */
+    public boolean exists(User user)throws RuntimeException{
+        boolean inPersistentContext = false;
+        boolean inPersistentStore = false;
+        
+        try(Session session = sessionFactory.openSession()){
+           
+            inPersistentContext = session.contains(user);
+            
+            if(!inPersistentContext){
+                User duplicateUser = session.byNaturalId(User.class)
+                .using("username",user.getName()).load();
+            
+                if(duplicateUser == null){
+                    inPersistentStore = false;
+                }else{
+                    inPersistentStore = true;
+                }    
+            }
+
+        }catch(RuntimeException e){
+            throw e;
+        }
+        return inPersistentContext || inPersistentStore;
+    }
+    
+    public String getUserPassword(String username)throws EntityNotFoundException{
+        String dbpassword = null;
+
+        try(Session session = sessionFactory.openSession()){
+            // Optional<User> user = session.byNaturalId(User.class)
+            //     .using("username",username)
+            //     .loadOptional();
+            // if(user.isEmpty()){
+            //     throw new RecordNotFoundException();
+            // }
+            User user = session.byNaturalId(User.class)
+                .using("username",username)
+                .getReference();
+            //no find()
+
+            dbpassword = user.getPassword();
+
+            // String hql = "select password from User where username = :username";
+            // dbpassword = session.createSelectionQuery(hql,String.class)
+            //     .setParameter("username",username)
+            //     .getSingleResult();
+        }catch(EntityNotFoundException e){
+            //thrown if record doesnt exists after using entity functions -> getReference()
+            throw e;
+        }
+        
+        return dbpassword;
+    }
+    /**
+     * checks if user exists by given username
+     * @param username
+     * @return
+     * @throws Exception
+     */
+    public boolean exists(String username)throws Exception{
+        boolean userExists = false;
+
+        try(Session session = sessionFactory.openSession()){
+            User duplicateUser = session.byNaturalId(User.class)
+                .using("username",username).load();
+            
+            if(duplicateUser == null){
+                userExists = false;
+            }else{
+                userExists = true;
+            }
+        }catch(Exception e){
+            throw e;
+        }
+
+        return userExists;
+    }
+
+    public User update(User user)throws Exception{
+        User updatedUser = null;
+        try(Session session = sessionFactory.openSession()){
+            Transaction tc = session.beginTransaction();
+
+            updatedUser = session.merge(user);
+
+            session.flush();
+
+            tc.commit();
+        }catch(Exception e){
+            throw e;
+        }
+
+        return updatedUser;
+    }    
+
+    public void delete(User user)throws Exception{
+        try(Session session = sessionFactory.openSession()){
+            Transaction tc = session.beginTransaction();
+
+            session.remove(user);
+
+            session.flush();
+
+            tc.commit();
+        }catch(Exception e){
+            throw e;
+        }
+    }
+
+    //dont call close on getCurrentSession();
+
+    //get user in batches
+    //this function doesnt care about owner info just wants the users following the owner
+    public Set<User> getUserFollowers(Long userID)throws EntityNotFoundException,Exception{
+        Set<User> followers = null;
+        
+        try(Session session = sessionFactory.openSession()){
+            //referencing is a way to check if user exists 
+            User user = session.byId(User.class).getReference(userID);
+            followers = user.getFollowers();
+        }catch(EntityNotFoundException e){
+            throw e;
+        }catch(Exception err){
+            throw err;
+        }
+
+        return followers;    
+    }
+
+    //use batches
+    public Set<User> getUserFollowing(Long userID)throws EntityNotFoundException,Exception{
+        Set<User> following = null;
+        
+        try(Session session = sessionFactory.openSession()){
+            User user = session.byId(User.class).getReference(userID);
+            following = user.getFollowing();
+
+        }catch(EntityNotFoundException e){
+            throw e;
+        }catch(Exception err){
+            throw err;
+        }
+
+        return following;    
+    }
+    
+    
+    public void addFollower(Long ownerID,Long followerID){
+
+        try(Session session = sessionFactory.openSession()){
+            User owner = session.find(User.class,ownerID);
+            User follower = session.find(User.class,followerID);
+
+            owner.addFollower(follower);
+            follower.addFollowing(owner);
+
+            Transaction tc = session.beginTransaction();
+            
+            session.merge(owner);
+            session.merge(follower);
+
+            session.flush();
+
+            tc.commit();
+        }catch(Exception e){
+
+        }
+    }
+
+
+    /**
+     * follower function.also checks the existence.merges
+     * @param owner
+     * @param follower
+     * @throws EntityNotFoundException
+     */
+    @Transactional(timeout = 5)
+    public void addFollower2(User owner,User follower)throws EntityNotFoundException{
+
+        //2 trip could be 1 using just update ids
+        try(Session session = sessionFactory.openSession()){
+
+            //or get blank entity and merge
+            User user1 = session.getReference(owner);
+            //imagine 2mil followers
+            //now batched
+            user1.getFollowers().add(follower);
+
+            session.merge(user1);
+
+            User user2 = session.getReference(follower);
+            user2.getFollowing().add(owner);
+            session.merge(user2);
+
+            session.flush();
+        }catch(EntityNotFoundException e){
+           throw e; 
+        }
+    }
+
+    //merges 2 new objects with existing objects in the database
+    public void addFollower(User owner,User follower)throws Exception{
+        try(Session session = sessionFactory.openSession()){
+            
+            //2 update statements
+            //batch update to 1 request
+            owner.getFollowers().add(follower);
+            owner = session.merge(owner);
+
+            follower.getFollowing().add(owner);
+            follower = session.merge(follower);
+
+        }catch(Exception e){
+            throw e;
+        }
+
+    }
+
+    public void removeFollower(User owner,User follower)throws Exception{
+        try(Session session = sessionFactory.openSession()){
+            owner.getFollowers().remove(follower);
+            owner = session.merge(owner);
+
+            follower.getFollowing().remove(owner);
+            follower = session.merge(follower);
+        }catch(Exception e){
+            throw e;
+        }
+
+    }
+}

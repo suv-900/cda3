@@ -1,11 +1,16 @@
 package com.cuda.backend.dao;
 
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
+import org.hibernate.query.SelectionQuery;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.cuda.backend.entities.Tweet;
@@ -19,6 +24,7 @@ public class TweetDaoImpl implements TweetDao{
     private SessionFactory sessionFactory = HibernateBox.getSessionFactory();
 
     private final int transaction_timeout = 5;
+    private final int batch_size = 10;
 
     public void add(Tweet tweet)throws Exception{
 
@@ -78,7 +84,7 @@ public class TweetDaoImpl implements TweetDao{
         }
     }
 
-    public void dislikeTweet(long tweetID)throws EntityNotFoundException,HibernateException{
+    public void dislikeTweet(long tweetID)throws EntityNotFoundException,HibernateException,RollbackException,IllegalStateException{
         
         Transaction transaction = null;
         
@@ -125,7 +131,8 @@ public class TweetDaoImpl implements TweetDao{
     }
 
 
-    public void likeTweet(long tweetID)throws EntityNotFoundException,HibernateException{
+    public void likeTweet(long tweetID)throws 
+        EntityNotFoundException,HibernateException,RollbackException,IllegalStateException{
         
         Transaction transaction = null;
         
@@ -169,5 +176,56 @@ public class TweetDaoImpl implements TweetDao{
             } 
             throw e;
         }
+    
+    }
+
+    public List<Tweet> getByIds(List<Long> tweetIds)throws HibernateException,Exception,IllegalArgumentException{
+        if(tweetIds.size() > 10){
+            throw new IllegalArgumentException("lenghts of ids cannot be more than 10."); 
+        }
+        
+        List<Tweet> tweetList = new LinkedList<>();
+        try{
+            Session session = sessionFactory.openSession();
+
+            tweetList = session.byMultipleIds(Tweet.class)
+                .enableOrderedReturn(false)//doesnt matter should improve perf
+                .enableReturnOfDeletedEntities(false)//return instances marked for removal in current sesion but present in database
+                .multiLoad(tweetIds);
+            
+            session.close();
+        }catch(HibernateException e){
+            //prolly occured during session.close()
+            throw e;
+        }catch(Exception e){
+            throw e;
+        }
+
+        return tweetList;
+    }
+
+    public List<Tweet> getUserTweetsOldest(long userID)throws HibernateException,Exception{
+        List<Tweet> tweetList = new LinkedList<>();
+
+        Transaction transaction = null;
+        try{
+            String hql = "from Tweets t where t.user.id = ? order by created_at asc";
+            
+            Session session = sessionFactory.openSession();
+            transaction = session.beginTransaction();
+            transaction.setTimeout(transaction_timeout);
+            
+            SelectionQuery<Tweet> query = session.createSelectionQuery(hql,Tweet.class);
+            query.setParameter(0,userID);
+            tweetList = query.getResultList();
+        }catch(HibernateException e){
+            if(transaction != null && transaction.isActive()) transaction.rollback();
+            throw e;
+        }catch(Exception e){
+            if(transaction != null && transaction.isActive()) transaction.rollback();
+            throw e;
+        }
+
+        return tweetList;
     }
 }

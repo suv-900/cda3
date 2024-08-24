@@ -1,21 +1,32 @@
 package com.cuda.backend.dao;
 
+import java.util.List;
+import java.util.Optional;
+
 import com.cuda.backend.entities.Tweet;
 
 public interface TweetDao {
    void add(Tweet tweet)throws Exception;
     
-   Tweet view(Long tweetID)throws Exception;
+   Optional<Tweet> view(long tweetID)throws Exception;
 
    void update(Tweet tweet)throws Exception;
    
    void delete(Tweet tweet)throws Exception;
 
-   void likeTweet(Long userID)throws Exception;
+   void likeTweet(long tweetID)throws Exception;
 
-   void dislikeTweet(Long userID)throws Exception;
+   void dislikeTweet(long tweetID)throws Exception;
 
-   void reportTweet(Long tweetID,Long userID)throws Exception;
+   List<Tweet> getByIds(List<Long> tweetIDs)throws Exception;
 
-   void retweet(Long tweetID,Long userID)throws Exception;
+   List<Tweet> getUserTweetsOldest(long userID)throws Exception;
+   
+   List<Tweet> getUserTweetsNewest(long userID)throws Exception;
+   
+   List<Tweet> getUserTweetsMostLiked(long userID)throws Exception;
+
+   // void reportTweet(Long tweetID,Long userID)throws Exception;
+
+   // void retweet(Long tweetID,Long userID)throws Exception;
 }

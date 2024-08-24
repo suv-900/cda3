@@ -1,5 +1,6 @@
 package com.cuda.backend.utilsbox;
 
+import java.sql.Connection;
 import java.util.Properties;
 
 import org.hibernate.SessionFactory;
@@ -22,6 +23,7 @@ public class HibernateBox {
             prop.setProperty("hibernate.jdbc.batch_size","10");
             prop.setProperty("hibernate.show_sql","true");
             prop.setProperty("hibernate.format_sql","true");
+            prop.setProperty("hibernate.connection.isolation",String.valueOf(Connection.TRANSACTION_SERIALIZABLE));
 
             SessionFactory sf = new Configuration()
                 .addAnnotatedClass(User.class)

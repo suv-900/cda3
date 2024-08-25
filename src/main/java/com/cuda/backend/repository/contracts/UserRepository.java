@@ -14,7 +14,7 @@ public interface UserRepository extends JpaRepository<User,Long>{
     Optional<User> getByName(String username)throws Exception;
     
     boolean exists(String username)throws Exception;
-    
+
     Optional<User> getByID(Long userID)throws Exception;
 
     List<User> getByIds(List<Long> userIds)throws Exception;

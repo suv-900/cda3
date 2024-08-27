@@ -29,6 +29,7 @@ public class UserRepositoryImplementor extends SimpleJpaRepository<User,Long> im
     public Optional<User> existsByName(String username){
         
         Assert.notNull(username,"username cannot be null");
+        
         Session session = sessionFactory.getCurrentSession();
         Optional<User> user = session.byNaturalId(User.class)
             .using("username",username).loadOptional();
@@ -36,21 +37,17 @@ public class UserRepositoryImplementor extends SimpleJpaRepository<User,Long> im
         return user;
     }
 
-    public Optional<User> getByIdOptional(long userID){
-        Optional<User> user= Optional.empty();
-        
-        Session session = sessionFactory.getCurrentSession();
-        user = session.byId(User.class).loadOptional(userID);
-
-        return user; 
-    }
-
+    
     public String getUserPassword(String username){
+        
+        Assert.notNull(username,"username cannot be null");
+        
         Session session = sessionFactory.getCurrentSession();
         String hashedPassword = session.byNaturalId(User.class)
             .using("username",username)
             .load()
             .getPassword();
+        
         return hashedPassword;
     }
 

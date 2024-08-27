@@ -2,8 +2,8 @@ package com.cuda.backend.entities;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.LinkedList;
+import java.util.List;
 
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.LazyGroup;
@@ -55,16 +55,16 @@ public class User implements Serializable{
    
     @BatchSize(size = 10)
     @ManyToMany(fetch = FetchType.LAZY)
-    private Set<User> following = new HashSet<>();
+    private List<User> following = new LinkedList<>();
 
     @BatchSize(size = 10)
     @ManyToMany(fetch = FetchType.LAZY)
-    private Set<User> followers = new HashSet<>();
+    private List<User> followers = new LinkedList<>();
 
 
     @BatchSize(size = 10)
     @OneToMany(fetch = FetchType.LAZY)
-    private Set<Tweet> tweets = new HashSet<>();
+    private List<Tweet> tweets = new LinkedList<>();
 
     @Column(name="created_at")
     private LocalDateTime createdAt;

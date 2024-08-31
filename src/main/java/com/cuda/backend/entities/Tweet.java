@@ -1,10 +1,14 @@
 package com.cuda.backend.entities;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
+
+import org.hibernate.annotations.BatchSize;
 
 import jakarta.persistence.Basic;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -19,63 +23,72 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@Entity
+@Entity(name = "Tweet")
 public class Tweet {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;   
+   
+    // @Version
+    // private int version;
     
     @NonNull
     private String tweet;
 
-    private long likes = 0;
+    private AtomicLong likes = new AtomicLong();
 
-    private long viewCount = 0;
+    private AtomicLong viewCount = new AtomicLong();
 
+    @NonNull
     private Category category = Category.UNLISTED;
 
     @NonNull
-    @OneToOne(fetch = FetchType.EAGER)
-    private User author;
+    @OneToOne(mappedBy = "tweets",fetch = FetchType.EAGER)
+    private User user;
 
     @Basic(fetch = FetchType.LAZY)
-    private Set<String> imageLocation = new HashSet<>();
+    private Tweet parentTweet = null;
 
-    @Basic(fetch = FetchType.LAZY)
-    @OneToMany
-    private Set<Tweet> replies = new HashSet<>();
+    @BatchSize(size = 10)
+    @OneToMany(mappedBy = "",cascade = CascadeType.REMOVE, fetch = FetchType.EAGER)
+    private List<Tweet> replies = new ArrayList<>();
+
+    @Basic(fetch = FetchType.EAGER)
+    private List<String> imageLocation = new ArrayList<>();
 
     @Column(name="created_at")
     private LocalDateTime createdAt;
 
     @Column(name="updated_at")
-    @Basic(fetch = FetchType.LAZY)
+    @Basic(fetch = FetchType.EAGER)
     private LocalDateTime updatedAt;
     
-    public synchronized void increaseLikes(){
-        //lock acquire
-        this.likes++;
-        //lock release
+    public long increaseLikes(){
+        return this.likes.incrementAndGet();
+    }
+    
+    public long decreaseLikes(){
+        return this.likes.decrementAndGet();
     }
 
-    public synchronized void decreaseLikes(){
-        this.likes--;
+    public long getLikes(){
+        return this.likes.get();
     }
 
-    public synchronized long getLikes(){
-        return this.likes;
+    public long increaseViewCount(){
+        return this.viewCount.incrementAndGet();
     }
 
-    public synchronized void increaseViewCount(){
-        this.viewCount++;
+    public long decreaseViewCount(){
+        return this.viewCount.decrementAndGet();
     }
 
-    public synchronized void decreaseViewCount(){
-        this.viewCount--;
+    public long getViewCount(){
+        return this.viewCount.get();
     }
-
-    public synchronized long getViewCount(){
-        return this.viewCount;
+    
+    public void setCategory(Category category){
+        this.category = category;
     }
 }
 

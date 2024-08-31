@@ -5,6 +5,8 @@ import java.util.Optional;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.query.Query;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.support.SimpleJpaRepository;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.Assert;
@@ -61,6 +63,36 @@ public class UserRepositoryImplementor extends SimpleJpaRepository<User,Long> im
         return user.getFollowers();
     }
     
+    public List<User> getFollowers(Long id,int pageNumber,int pageSize){
+        Assert.notNull(id,"id cannot be null");
+        Assert.notNull(pageNumber,"page offset cannot be null");
+        Assert.notNull(pageSize,"page size cannot be null");
+        
+        String sqlString = "select u.id,u.name from users u join relationships r on u.id = r.follower_id where r.following_id = ?";
+        Session session = sessionFactory.openSession();
+        Query<User> query = session.createNativeQuery(sqlString,User.class);
+        
+        query.setFirstResult(pageNumber);
+        query.setFetchSize(pageSize);
+        query.setParameter(0,id);
+
+        return query.getResultList();
+    }
+    public List<User> getFollowing(Long id,int pageNumber,int pageSize){
+        Assert.notNull(id,"id cannot be null");
+        Assert.notNull(pageNumber,"page offset cannot be null");
+        Assert.notNull(pageSize,"page size cannot be null");
+
+        String sqlString = "select u.id,u.name from users u join relationships r on u.id = r.following_id where r.follower_id = ?";
+        Session session = sessionFactory.openSession();
+        Query<User> query = session.createNativeQuery(sqlString,User.class);
+        
+        query.setFirstResult(pageNumber);
+        query.setFetchSize(pageSize);
+        query.setParameter(0,id);
+
+        return query.getResultList();
+    }
     public List<User> getFollowing(Long userID){
 
         Assert.notNull(userID,"user id cannot be null");

@@ -5,14 +5,18 @@ import java.util.Optional;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.graph.RootGraph;
+import org.hibernate.query.Query;
 import org.hibernate.query.SelectionQuery;
 import org.springframework.data.jpa.repository.support.SimpleJpaRepository;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.Assert;
 
 import com.cuda.backend.entities.Tweet;
+import com.cuda.backend.entities.User;
 import com.cuda.backend.utilsbox.HibernateBox;
 
+import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -25,8 +29,30 @@ public class TweetRepositoryImplementor extends SimpleJpaRepository<Tweet,Long> 
    public TweetRepositoryImplementor(EntityManager entityManager){
       super(Tweet.class,entityManager);
    }
-   
-   @Transactional
+    
+    public Optional<Tweet> getByIdLoadGraph(Long tweetId){
+        Assert.notNull(tweetId,"tweet id cannot be null");
+
+        Session session = sessionFactory.getCurrentSession();
+
+        RootGraph<Tweet> graph = session.createEntityGraph(Tweet.class);
+    
+        graph.addAttributeNode("user");
+        graph.addAttributeNode("replies");
+        graph.addSubGraph("replies").addAttributeNode("user");
+        
+        Optional<Tweet> tweet = session.byId(Tweet.class).withFetchGraph(graph).loadOptional(tweetId);
+
+        return tweet;
+    }
+
+    
+    @Transactional
+    public void addTweetReply(Long parentTweetId,Tweet replyTweet){
+
+    }
+
+    @Transactional
     public void likeTweet(Long tweetID){
 
         Assert.notNull(tweetID,"tweet id cannot be null");
@@ -102,6 +128,22 @@ public class TweetRepositoryImplementor extends SimpleJpaRepository<Tweet,Long> 
         return query.getResultList();
         
     }
-   
+  
+    public List<User> getUsersWhoLikedTweet(Long tweetId,int pageNumber,int pageSize){
+        Assert.notNull(tweetId,"tweet id cannot be null");
+        Assert.notNull(pageNumber,"page number cannot be null");
+        Assert.notNull(pageSize,"page size cannot be null");
+
+        String sqlString = "select u.id,u.name from users u join likes l on u.id = l.user_id where l.tweet_id = ?";
+        Session session = sessionFactory.openSession();
+        Query<User> query = session.createNativeQuery(sqlString,User.class);
+        
+        query.setParameter(0,tweetId);
+        query.setFirstResult(pageNumber);
+        query.setFetchSize(pageSize);
+
+        return query.getResultList();
+
+    }
    
 }

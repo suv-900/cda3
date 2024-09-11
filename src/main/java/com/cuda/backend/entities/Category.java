@@ -5,6 +5,7 @@ public enum Category{
    POLITICS,
    NEWS,
    ENTERTAINMENT,
+   PROGRAMMING,
    COMPUTERS,
    SPACE,
    SCIENCE,

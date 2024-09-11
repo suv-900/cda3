@@ -6,26 +6,25 @@ import java.util.Optional;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.query.Query;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.support.SimpleJpaRepository;
-import org.springframework.stereotype.Repository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.Assert;
 
 import com.cuda.backend.entities.User;
-import com.cuda.backend.utilsbox.HibernateBox;
 
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 
-
-@Repository
-public class UserRepositoryImplementor extends SimpleJpaRepository<User,Long> implements UserRepository {
+public class CustomUserRepositoryImpl implements CustomUserRepository {
     
-    private SessionFactory sessionFactory = HibernateBox.getSessionFactory();
+    @Autowired
+    private SessionFactory sessionFactory;
 
-    public UserRepositoryImplementor(EntityManager entityManager){
-        super(User.class,entityManager);
+    public void init(){
+        System.out.println("creating user_repository bean");
+    }
+
+    public void destroy(){
+        System.out.println("destroying user_repository bean");
     }
 
     public Optional<User> existsByName(String username){
@@ -158,5 +157,4 @@ public class UserRepositoryImplementor extends SimpleJpaRepository<User,Long> im
 
     }
     
-
 }

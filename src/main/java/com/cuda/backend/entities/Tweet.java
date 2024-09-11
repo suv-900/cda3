@@ -15,15 +15,18 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
 
 @Getter
 @Setter
-@Entity(name = "Tweet")
+@Entity
+@Table(name = "tweets")
 public class Tweet {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -43,14 +46,16 @@ public class Tweet {
     private Category category = Category.UNLISTED;
 
     @NonNull
-    @OneToOne(mappedBy = "tweets",fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "user_id") //creates a forieng key column
     private User user;
 
+    @ManyToOne
     @Basic(fetch = FetchType.LAZY)
     private Tweet parentTweet = null;
 
     @BatchSize(size = 10)
-    @OneToMany(mappedBy = "",cascade = CascadeType.REMOVE, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "parentTweet",cascade = CascadeType.REMOVE, fetch = FetchType.EAGER)
     private List<Tweet> replies = new ArrayList<>();
 
     @Basic(fetch = FetchType.EAGER)

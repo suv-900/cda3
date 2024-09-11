@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.validation.constraints.NotBlank;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.LazyGroup;
 import org.hibernate.annotations.NaturalId;
@@ -24,12 +25,11 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.Getter;
-import lombok.NonNull;
 import lombok.Setter;
 
 @Getter
 @Setter
-@Entity(name = "User")
+@Entity
 @Table(name = "users")
 @NaturalIdCache
 public class User implements Serializable{
@@ -37,15 +37,15 @@ public class User implements Serializable{
     @GeneratedValue(strategy=GenerationType.IDENTITY)
     private long id;//allow illegal objects with null id
    
-    @NonNull
+    @NotBlank(message = "username cannot be blank")
     @NaturalId
-    private String name;
+    private String username;
     
     private String nickname;
 
     private boolean active = false;
     
-    @NonNull
+    @NotBlank(message = "email cannot be blank")
     @LazyGroup("lazy_email_group") //remember bytecode enhancement
     @Basic(fetch = FetchType.LAZY)
     private String email;
@@ -54,7 +54,9 @@ public class User implements Serializable{
     @Basic(fetch = FetchType.LAZY)
     private boolean emailVerified = false;
 
-    @NonNull
+    @Getter
+    @Setter
+    @NotBlank(message = "password cannot be blank")
     @Basic(fetch=FetchType.LAZY)
     private String password;
     
@@ -74,12 +76,12 @@ public class User implements Serializable{
 
 
     @OneToMany(
+        mappedBy = "user",
         targetEntity = Tweet.class,
         cascade = CascadeType.REMOVE, 
         fetch = FetchType.LAZY
     )
     @BatchSize(size = 10)
-    @JoinColumn(name = "user_id") //creates a forieng key column
     private List<Tweet> tweets = new ArrayList<>();
 
     @Column(name="created_at")

@@ -8,28 +8,25 @@ import org.hibernate.SessionFactory;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.query.Query;
 import org.hibernate.query.SelectionQuery;
-import org.springframework.data.jpa.repository.support.SimpleJpaRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.Assert;
 
 import com.cuda.backend.entities.Tweet;
 import com.cuda.backend.entities.User;
-import com.cuda.backend.utilsbox.HibernateBox;
 
-import jakarta.persistence.EntityGraph;
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Repository
-public class TweetRepositoryImplementor extends SimpleJpaRepository<Tweet,Long> implements TweetRepository{
-   
-   private SessionFactory sessionFactory = HibernateBox.getSessionFactory();
-   
-   public TweetRepositoryImplementor(EntityManager entityManager){
-      super(Tweet.class,entityManager);
-   }
-    
+public class CustomTweetRepositoryImpl implements CustomTweetRepository{
+    private final int batchSize = 5;
+
+    @Autowired
+    private SessionFactory sessionFactory;
+
     public Optional<Tweet> getByIdLoadGraph(Long tweetId){
         Assert.notNull(tweetId,"tweet id cannot be null");
 
@@ -145,5 +142,33 @@ public class TweetRepositoryImplementor extends SimpleJpaRepository<Tweet,Long> 
         return query.getResultList();
 
     }
-   
+
+    //implement aspects
+    public List<Tweet> getTweetReplies(Long parentTweetId,int pageNumber,int pageSize){
+        Assert.notNull(parentTweetId,"parent tweet id cannot be null");
+        Assert.notNull(pageNumber,"page number cannot be null");
+        Assert.notNull(pageSize,"page size cannot be null");
+
+        String sqlString = "select t.tweet_id,t.tweet,t.likes,t.view_count,t.created_at,u.id,u.name from users u join tweets t on u.id = t.user_id where t.parent_tweet_id = ?";
+        Session session = sessionFactory.openSession();
+        
+        List<Tweet> tweetReplies = session.createQuery(sqlString,Tweet.class).getResultList();
+
+        return tweetReplies;
+    }
+    
+    public void insertInBatch(Iterable<Tweet> tweets){
+        Session session = sessionFactory.openSession();
+        int count = 0;
+        for(Tweet tweet : tweets){
+            if(count % batchSize == 0 ){
+                session.flush();
+                session.clear();
+            }
+            
+            session.persist(tweet);
+            count++; 
+        }
+        session.flush();
+    }
 }

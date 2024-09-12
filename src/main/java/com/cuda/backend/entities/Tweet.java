@@ -48,7 +48,7 @@ public class Tweet {
     @NonNull
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id") //creates a forieng key column
-    private User user;
+    private User author;
 
     @ManyToOne
     @Basic(fetch = FetchType.LAZY)

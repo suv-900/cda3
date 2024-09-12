@@ -23,7 +23,11 @@ public interface UserService {
 
     // void removeProfilePicture(Long userId);
 
-    void delete(Long id);
+    void deleteById(Long id);
+
+    void delete(User user);
+
+    void deleteAll();
 
     Optional<User> getById(Long userID);  
     

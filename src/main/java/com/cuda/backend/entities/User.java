@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import jakarta.validation.constraints.NotBlank;
+
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.LazyGroup;
 import org.hibernate.annotations.NaturalId;
@@ -26,16 +27,18 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 @Getter
 @Setter
+@ToString
 @Entity
 @Table(name = "users")
 @NaturalIdCache
 public class User implements Serializable{
     @Id
     @GeneratedValue(strategy=GenerationType.IDENTITY)
-    private long id;//allow illegal objects with null id
+    private Long id;
    
     @NotBlank(message = "username cannot be blank")
     @NaturalId
@@ -50,12 +53,11 @@ public class User implements Serializable{
     @Basic(fetch = FetchType.LAZY)
     private String email;
 
+    @Column(name = "email_verified")
     @LazyGroup("lazy_email_group")
     @Basic(fetch = FetchType.LAZY)
     private boolean emailVerified = false;
 
-    @Getter
-    @Setter
     @NotBlank(message = "password cannot be blank")
     @Basic(fetch=FetchType.LAZY)
     private String password;
@@ -76,7 +78,7 @@ public class User implements Serializable{
 
 
     @OneToMany(
-        mappedBy = "user",
+        mappedBy = "author",
         targetEntity = Tweet.class,
         cascade = CascadeType.REMOVE, 
         fetch = FetchType.LAZY

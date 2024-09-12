@@ -6,6 +6,9 @@ import com.cuda.backend.services.UserService;
 
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -13,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @RestController
 @RequestMapping(path = "/users")
 public class UserHandler{
@@ -54,13 +58,8 @@ public class UserHandler{
 
     @PostMapping(path = "/register")
     @ResponseStatus(code = HttpStatus.CREATED)
-    public void register(@Valid @RequestBody User user,
-                         HttpServletResponse response){
-        Long userId = userService.register(user);
-
-        String token = "";
-
-        response.setHeader("Authorization",token);
+    public void register(@Valid @RequestBody User user){
+        log.info("User : "+user.toString());
     }
 
     // @PutMapping(path = "/update")
@@ -69,9 +68,9 @@ public class UserHandler{
     // }
 
     @ResponseStatus(code = HttpStatus.OK)
-    @DeleteMapping(path = "/delete/{userId}")
-    public void delete(@PathVariable Long userId){
-        userService.delete(userId);
+    @DeleteMapping(path = "/delete")
+    public void delete(@NotNull @RequestParam Long id){
+        userService.deleteById(id);
     }
 
     @ResponseStatus(code = HttpStatus.OK)

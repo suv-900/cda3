@@ -42,13 +42,17 @@ public class UserServiceImpl extends AbstractService implements UserService{
     	return userRepository.save(user);
     }
     
-    public void delete(Long id){
+    public void deleteById(Long userId){
+        Assert.notNull(userId,"user id cannot be null");
+        userRepository.deleteById(userId);
+    }
 
-        Assert.notNull(id,"user id cannot be null");
-
-        User user = new User();
-        user.setId(id);
+    public void delete(User user){
         userRepository.delete(user);
+    }
+
+    public void deleteAll(){
+        userRepository.deleteAll();
     }
 
     public Optional<User> getById(Long id){

@@ -6,6 +6,10 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.hibernate.annotations.BatchSize;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.Basic;
 import jakarta.persistence.CascadeType;
@@ -25,16 +29,13 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@Entity
+@Entity(name = "tweet")
 @Table(name = "tweets")
 public class Tweet {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;   
    
-    // @Version
-    // private int version;
-    
     @NonNull
     private String tweet;
 
@@ -42,28 +43,30 @@ public class Tweet {
 
     private AtomicLong viewCount = new AtomicLong();
 
-    @NonNull
-    private Category category = Category.UNLISTED;
-
+    @JsonIgnore
     @NonNull
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "user_id") //creates a forieng key column
+    @JoinColumn(name = "author_id") //creates a forieng key column
     private User author;
 
+    @JsonIgnore
     @ManyToOne
     @Basic(fetch = FetchType.LAZY)
     private Tweet parentTweet = null;
 
+    @JsonIgnore
     @BatchSize(size = 10)
-    @OneToMany(mappedBy = "parentTweet",cascade = CascadeType.REMOVE, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "parentTweet",
+    cascade = CascadeType.REMOVE, 
+    fetch = FetchType.EAGER)
     private List<Tweet> replies = new ArrayList<>();
 
-    @Basic(fetch = FetchType.EAGER)
-    private List<String> imageLocation = new ArrayList<>();
-
+    @CreationTimestamp
     @Column(name="created_at")
     private LocalDateTime createdAt;
 
+    @JsonIgnore
+    @UpdateTimestamp
     @Column(name="updated_at")
     @Basic(fetch = FetchType.EAGER)
     private LocalDateTime updatedAt;
@@ -92,9 +95,6 @@ public class Tweet {
         return this.viewCount.get();
     }
     
-    public void setCategory(Category category){
-        this.category = category;
-    }
 }
 
 //two sessions holding the same object and tries to update counter;

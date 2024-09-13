@@ -4,6 +4,9 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import com.cuda.backend.entities.Tweet;
@@ -49,8 +52,18 @@ public class TweetServiceImpl extends AbstractService implements TweetService{
         tweetRepository.removeLike(tweetId);
     }
 
-    public Long replyTweet(Long parentTweetId,Tweet tweet){
-        return tweetRepository.replyTweet(parentTweetId,tweet);
+    public Long replyTweet(Long parentTweetId,Long authorId,Tweet replyTweet){
+        Tweet parentTweet = new Tweet();
+        parentTweet.setId(parentTweetId);
+        replyTweet.setParentTweet(parentTweet);
+        
+        User author = new User();
+        author.setId(authorId);
+        replyTweet.setAuthor(author);
+
+        save(replyTweet);
+
+        return replyTweet.getId();
     }
     
     public Optional<Tweet> read(Long tweetId,Long userId){
@@ -85,5 +98,10 @@ public class TweetServiceImpl extends AbstractService implements TweetService{
         return tweetRepository.getUserTweetsNewest(userId,pageCount,pageSize);
     }
     
+    public List<Tweet> getAll(int pageCount){
+        Pageable pageable = PageRequest.of(pageCount,pageSize);
+        Page<Tweet> page = tweetRepository.findAll(pageable);
+        return page.getContent();
+    }
 }
 

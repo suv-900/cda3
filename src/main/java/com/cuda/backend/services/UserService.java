@@ -29,8 +29,12 @@ public interface UserService {
 
     void deleteAll();
 
-    Optional<User> getById(Long userID);  
-    
+    Optional<User> getById(Long userId);  
+   
+    User getByIdExample(Long userId);
+
+    User getByNameExample(String username);
+
 //    void follow(Long following,Long follower);
 
     List<User> getFollowers(Long id,int pageCount);
@@ -42,6 +46,8 @@ public interface UserService {
     void unfollow(Long followerId,Long followingId);
 
     long count();
+
+    List<User> getAll();
 
 //    Long countOfActiveUsers();
 

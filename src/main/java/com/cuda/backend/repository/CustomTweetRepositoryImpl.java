@@ -13,7 +13,6 @@ import org.springframework.util.Assert;
 
 import com.cuda.backend.entities.Tweet;
 import com.cuda.backend.entities.User;
-import com.cuda.backend.exceptions.RecordNotFoundException;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -45,23 +44,37 @@ public class CustomTweetRepositoryImpl implements CustomTweetRepository{
 
         return tweet;
     }
-
     
+    // @Transactional
+    // public Long replyTweet(Long parentTweetId,Tweet replyTweet){
+    //     Assert.notNull(parentTweetId,"parent tweetId cannot be null");
+
+    //     Session session = sessionFactory.openSession();
+    //     Optional<Tweet> parentTweetOpt = session.byId(Tweet.class).loadOptional(parentTweetId);
+
+    //     if(parentTweetOpt.isEmpty()){
+    //         throw new RecordNotFoundException("parent tweet doesnt exists");
+    //     }
+
+    //     Tweet parentTweet = parentTweetOpt.get();
+    //     parentTweet.getReplies().add(replyTweet);
+    //     replyTweet.setParentTweet(parentTweet);
+       
+    //     session.persist(replyTweet);
+    //     session.merge(parentTweet);
+        
+    //     return replyTweet.getId();
+    // }
+
     @Transactional
     public Long replyTweet(Long parentTweetId,Tweet replyTweet){
-        Assert.notNull(parentTweetId,"parent tweetId cannot be null");
-
-        Session session = sessionFactory.getCurrentSession();
-        Optional<Tweet> parentTweetOpt = session.byId(Tweet.class).loadOptional(parentTweetId);
-
-        if(parentTweetOpt.isEmpty()){
-            throw new RecordNotFoundException("parent tweet doesnt exists");
-        }
-
-        Tweet parentTweet = parentTweetOpt.get();
-        parentTweet.getReplies().add(replyTweet);
-       
-        session.merge(parentTweet);
+        
+        Tweet parentTweet = new Tweet();
+        parentTweet.setId(parentTweetId);
+        replyTweet.setParentTweet(parentTweet);
+        
+        Session session = sessionFactory.openSession();
+        session.persist(replyTweet);
         
         return replyTweet.getId();
     }
@@ -105,55 +118,52 @@ public class CustomTweetRepositoryImpl implements CustomTweetRepository{
     }
 
 
-    @Transactional 
-    public List<Tweet> getUserTweetsMostLiked(Long userId,int pageCount,int pageSize){
-        Assert.notNull(userId,"tweet id cannot be null");
+    public List<Tweet> getUserTweetsMostLiked(Long authorId,int pageCount,int pageSize){
+        Assert.notNull(authorId,"tweet id cannot be null");
         Assert.notNull(pageCount,"page number cannot be null");
         Assert.notNull(pageSize,"page size cannot be null");
 
-        String sql = "select t.id,t.tweet,t.likes,t.view_count from tweets t t.user.id = ? order by t.likes desc";
+        String hql = "from tweet t where t.author.id = :authorId order by t.likes desc";
         Session session = sessionFactory.openSession();
-        Query<Tweet> query = session.createNativeQuery(sql,Tweet.class);
+        Query<Tweet> query = session.createQuery(hql,Tweet.class);
         
-        query.setParameter(0,userId);
+        query.setParameter("authorId",authorId);
         query.setFirstResult(pageCount);
-        query.setFetchSize(pageSize);
+        query.setMaxResults(pageSize);
 
         return query.getResultList();
     }
 
-    @Transactional
-    public List<Tweet> getUserTweetsOldest(Long userId,int pageCount,int pageSize){
-        Assert.notNull(userId,"tweet id cannot be null");
+    public List<Tweet> getUserTweetsOldest(Long authorId,int pageCount,int pageSize){
+        Assert.notNull(authorId,"tweet id cannot be null");
         Assert.notNull(pageCount,"page number cannot be null");
         Assert.notNull(pageSize,"page size cannot be null");
 
-        String sql = "select t.id,t.tweet,t.likes,t.view_count from tweets t where t.user.id = ? order by t.created_at asc";
+        String hql = "from tweet t where t.author.id = :authorId order by t.createdAt asc";
         Session session = sessionFactory.openSession();
-        Query<Tweet> nativeQuery = session.createNativeQuery(sql,Tweet.class);
+        Query<Tweet> query = session.createQuery(hql,Tweet.class);
 
-        nativeQuery.setParameter(0,userId);
-        nativeQuery.setFirstResult(pageCount);
-        nativeQuery.setFetchSize(pageSize);
+        query.setParameter("authorId",authorId);
+        query.setFirstResult(pageCount);
+        query.setMaxResults(pageSize);
 
-        return nativeQuery.getResultList();
+        return query.getResultList();
     }
 
-    @Transactional
-    public List<Tweet> getUserTweetsNewest(Long userId,int pageCount,int pageSize){
-        Assert.notNull(userId,"tweet id cannot be null");
+    public List<Tweet> getUserTweetsNewest(Long authorId,int pageCount,int pageSize){
+        Assert.notNull(authorId,"tweet id cannot be null");
         Assert.notNull(pageCount,"page number cannot be null");
         Assert.notNull(pageSize,"page size cannot be null");
 
-        String sql = "select t.id,t.tweet,t.likes,t.view_count,t.created_at from tweets t where t.user.id = ? order by t.created_at desc";
+        String hql = "from tweet t where t.author.id = :authorId order by t.createdAt desc";
         Session session = sessionFactory.openSession();
-        Query<Tweet> nativeQuery = session.createNativeQuery(sql,Tweet.class);
+        Query<Tweet> query = session.createQuery(hql,Tweet.class);
 
-        nativeQuery.setParameter(0,userId);
-        nativeQuery.setFirstResult(pageCount);
-        nativeQuery.setFetchSize(pageSize);
+        query.setParameter("authorId",authorId);
+        query.setFirstResult(pageCount);
+        query.setMaxResults(pageSize);
 
-        return nativeQuery.getResultList();
+        return query.getResultList();
     }
 
     public List<User> getUsersWhoLikedTweet(Long tweetId,int pageNumber,int pageSize){
@@ -173,18 +183,20 @@ public class CustomTweetRepositoryImpl implements CustomTweetRepository{
 
     }
 
-    //implement aspects
-    public List<Tweet> getTweetReplies(Long parentTweetId,int pageNumber,int pageSize){
+    public List<Tweet> getTweetReplies(Long parentTweetId,int pageCount,int pageSize){
         Assert.notNull(parentTweetId,"parent tweet id cannot be null");
-        Assert.notNull(pageNumber,"page number cannot be null");
+        Assert.notNull(pageCount,"page number cannot be null");
         Assert.notNull(pageSize,"page size cannot be null");
 
-        String sqlString = "select t.tweet_id,t.tweet,t.likes,t.view_count,t.created_at,u.id,u.name from users u join tweets t on u.id = t.user_id where t.parent_tweet_id = ?";
+        String hql = "from tweet t where t.parentTweet.id = :parentTweetId order by t.likes desc";
         Session session = sessionFactory.openSession();
-        
-        List<Tweet> tweetReplies = session.createQuery(sqlString,Tweet.class).getResultList();
+        Query<Tweet> query = session.createQuery(hql,Tweet.class);
 
-        return tweetReplies;
+        query.setParameter("parentTweetId",parentTweetId);
+        query.setFirstResult(pageCount);
+        query.setMaxResults(pageSize);
+
+        return query.getResultList();
     }
     
     public void insertInBatch(Iterable<Tweet> tweets){

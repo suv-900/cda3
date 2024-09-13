@@ -10,10 +10,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.Assert;
 
 import com.cuda.backend.entities.User;
+import com.cuda.backend.exceptions.RecordNotFoundException;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class CustomUserRepositoryImpl implements CustomUserRepository {
     
     @Autowired
@@ -108,14 +111,14 @@ public class CustomUserRepositoryImpl implements CustomUserRepository {
         Assert.notNull(ownerID,"owner id cannot be null");
         Assert.notNull(followerID,"follower id cannot be null");
 
-        Session session = sessionFactory.getCurrentSession();
+        Session session = sessionFactory.openSession();
         Optional<User> ownerBox = session.byId(User.class).loadOptional(ownerID);
         if(ownerBox.isEmpty()){
-            throw new EntityNotFoundException();
+            throw new RecordNotFoundException("owner not found");
         }
         Optional<User> followerBox = session.byId(User.class).loadOptional(followerID);
         if(followerBox.isEmpty()){
-            throw new EntityNotFoundException();
+            throw new RecordNotFoundException("follower not found");
         }
 
         User owner = ownerBox.get();
@@ -135,7 +138,7 @@ public class CustomUserRepositoryImpl implements CustomUserRepository {
         Assert.notNull(ownerID,"owner id cannot be null");
         Assert.notNull(followerID,"follower id cannot be null");
 
-        Session session = sessionFactory.getCurrentSession();
+        Session session = sessionFactory.openSession();
         Optional<User> ownerBox = session.byId(User.class).loadOptional(ownerID);
         if(ownerBox.isEmpty()){
             throw new EntityNotFoundException("owner entity not found");

@@ -8,9 +8,13 @@ import java.util.List;
 import jakarta.validation.constraints.NotBlank;
 
 import org.hibernate.annotations.BatchSize;
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.LazyGroup;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.NaturalIdCache;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.Basic;
 import jakarta.persistence.CascadeType;
@@ -39,29 +43,35 @@ public class User implements Serializable{
     @Id
     @GeneratedValue(strategy=GenerationType.IDENTITY)
     private Long id;
-   
+  
+    @Column(name = "username",nullable = false)
     @NotBlank(message = "username cannot be blank")
     @NaturalId
     private String username;
     
     private String nickname;
 
-    private boolean active = false;
-    
+    private boolean active;
+   
+    @JsonIgnore
     @NotBlank(message = "email cannot be blank")
-    @LazyGroup("lazy_email_group") //remember bytecode enhancement
+    @LazyGroup("lazy_email_group") 
     @Basic(fetch = FetchType.LAZY)
     private String email;
 
+    @JsonIgnore
     @Column(name = "email_verified")
     @LazyGroup("lazy_email_group")
     @Basic(fetch = FetchType.LAZY)
-    private boolean emailVerified = false;
+    private boolean emailVerified;
 
+    @JsonIgnore
+    @Column(name = "password",nullable = false)
     @NotBlank(message = "password cannot be blank")
     @Basic(fetch=FetchType.LAZY)
     private String password;
-    
+   
+    @JsonIgnore
     @JoinTable(
         name = "relationships",
         joinColumns = @JoinColumn(name = "follower_id"),
@@ -71,12 +81,13 @@ public class User implements Serializable{
     @ManyToMany(fetch = FetchType.LAZY)
     private List<User> following = new ArrayList<>();
 
-    
+   
+    @JsonIgnore
     @BatchSize(size = 10)
     @ManyToMany(mappedBy = "following",fetch = FetchType.LAZY)
     private List<User> followers = new ArrayList<>();
 
-
+    @JsonIgnore
     @OneToMany(
         mappedBy = "author",
         targetEntity = Tweet.class,
@@ -86,9 +97,12 @@ public class User implements Serializable{
     @BatchSize(size = 10)
     private List<Tweet> tweets = new ArrayList<>();
 
+    @CreationTimestamp
     @Column(name="created_at")
     private LocalDateTime createdAt;
 
+    @JsonIgnore
+    @UpdateTimestamp
     @Column(name="updated_at")
     @Basic(fetch=FetchType.LAZY)
     private LocalDateTime updatedAt;

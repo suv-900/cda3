@@ -10,6 +10,8 @@ public interface TweetService {
    Optional<Tweet> read(Long id);
    
    // Optional<Tweet> read(Long id,Long userId);
+  
+   List<Tweet> getAll(int pageCount);
    
    Tweet save(Tweet tweet);
 
@@ -25,7 +27,7 @@ public interface TweetService {
    
    void removeLike(Long tweetId,Long userId);
 
-   Long replyTweet(Long rootTweetId,Tweet replyTweet);
+   Long replyTweet(Long parentTweetId,Long authorId,Tweet replyTweet);
 
    // void bookMarkTweet(Long tweetId,Long userId);
 

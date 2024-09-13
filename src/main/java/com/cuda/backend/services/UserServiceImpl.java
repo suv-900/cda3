@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
 import com.cuda.backend.entities.User;
+import com.cuda.backend.exceptions.RecordNotFoundException;
 import com.cuda.backend.repository.UserRepository;
 
 @Service
@@ -22,12 +23,10 @@ public class UserServiceImpl extends AbstractService implements UserService{
     private UserRepository userRepository;
 
     public Long register(User user){
-        String hashedPassword = "";
-        user.setPassword(hashedPassword);
 
-        User savedUser = userRepository.save(user);
+        userRepository.save(user);
 
-        return savedUser.getId();
+        return user.getId();
     }
     
     public void login(String username,String password){
@@ -91,6 +90,41 @@ public class UserServiceImpl extends AbstractService implements UserService{
         return page.getContent();
     }
 
+    public User getByIdExample(Long userId){
+        User user = new User();
+        user.setId(userId);
+
+        ExampleMatcher matcher = ExampleMatcher.matching()
+            .withIgnorePaths("active","emailVerified");
+        Example<User> example = Example.of(user,matcher);
+
+        Optional<User> userOpt = userRepository.findOne(example);
+
+        if(userOpt.isEmpty()){
+            throw new RecordNotFoundException("user doesnt exists.");
+        }else{
+            return userOpt.get();
+        }
+
+    }
+
+    public User getByNameExample(String username){
+        User user = new User();
+        user.setUsername(username);
+
+        ExampleMatcher matcher = ExampleMatcher.matching()
+            .withIgnorePaths("active","emailVerified");
+        Example<User> example = Example.of(user,matcher);
+
+        Optional<User> userOpt = userRepository.findOne(example);
+
+        if(userOpt.isEmpty()){
+            throw new RecordNotFoundException("User not found.");
+        }else{
+            return userOpt.get();
+        }
+    }
+
     public boolean existsByName(String name){
         User user = new User();
         user.setUsername(name);
@@ -108,5 +142,9 @@ public class UserServiceImpl extends AbstractService implements UserService{
 
     public void unfollow(Long followerId,Long followingId){
         userRepository.removeFollower(followerId,followingId);
+    }
+
+    public List<User> getAll(){
+        return userRepository.findAll();
     }
 }

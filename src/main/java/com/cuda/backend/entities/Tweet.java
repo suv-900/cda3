@@ -32,7 +32,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@Entity(name = "tweet")
+@Entity
 @Table(name = "tweets")
 public class Tweet {
     @Id

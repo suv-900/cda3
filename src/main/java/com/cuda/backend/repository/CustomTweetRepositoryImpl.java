@@ -1,5 +1,6 @@
 package com.cuda.backend.repository;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,7 +17,7 @@ import com.cuda.backend.entities.Tweet;
 import com.cuda.backend.entities.User;
 import com.cuda.backend.exceptions.RecordNotFoundException;
 
-import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.Tuple;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 
@@ -102,6 +103,7 @@ public class CustomTweetRepositoryImpl implements CustomTweetRepository{
         
         Optional<Tweet> tweetOptional = session.byId(Tweet.class).loadOptional(tweetId);
         if(tweetOptional.isEmpty()){
+            session.close();
             throw new RecordNotFoundException("tweet doesnt exists.");
         }
 
@@ -119,26 +121,33 @@ public class CustomTweetRepositoryImpl implements CustomTweetRepository{
         
         session.close();
     }
-    
+   
     @Transactional
-    public void removeLike(Long tweetID,Long userId){
+    public void removeLike(Long tweetId,Long userId){
+        Assert.notNull(tweetId,"tweet id cannot be null");
+        Assert.notNull(userId,"user id cannot be null");
 
-        Assert.notNull(tweetID,"tweet id cannot be null");
-
-        Session session = sessionFactory.getCurrentSession();
-        Optional<Tweet> tweetOptional = session.byId(Tweet.class).loadOptional(tweetID);
+        Session session = sessionFactory.openSession();
+        Transaction tc = session.beginTransaction();
+        Optional<Tweet> tweetOptional = session.byId(Tweet.class).loadOptional(tweetId);
 
         if(tweetOptional.isEmpty()){
-            throw new EntityNotFoundException();
+            session.close();
+            throw new RecordNotFoundException("tweet doesnt exists");
         }
 
+        User user = new User();
+        user.setId(userId);
         Tweet tweet = tweetOptional.get();
+        tweet.removeUserFromLikes(user);
         tweet.decreaseLikeCount();
 
         session.merge(tweet);
+        session.flush();
+        tc.commit();
+
         session.close();
     }
-
 
     public List<Tweet> getUserTweetsMostLiked(Long authorId,int pageCount,int pageSize){
         Assert.notNull(authorId,"tweet id cannot be null");
@@ -202,18 +211,28 @@ public class CustomTweetRepositoryImpl implements CustomTweetRepository{
         Assert.notNull(pageNumber,"page number cannot be null");
         Assert.notNull(pageSize,"page size cannot be null");
 
-        String sqlString = "select u.id,u.name from users u join likes l on u.id = l.user_id where l.tweet_id = ?";
+        String hql = "select u.id,u.username,u.nickname from Tweet t join t.userLikes u where t.id = :tweetId";
         Session session = sessionFactory.openSession();
-        Query<User> query = session.createNativeQuery(sqlString,User.class);
-        
-        query.setParameter(0,tweetId);
-        query.setFirstResult(pageNumber);
-        query.setFetchSize(pageSize);
+        Query<Tuple> query = session.createQuery(hql,Tuple.class);
+       
+        query.setParameter("tweetId",tweetId);
+        query.setFirstResult(pageNumber * pageSize);
+        query.setMaxResults(pageSize);
 
-        List<User> tweets = query.getResultList();
+        List<Tuple> result = query.getResultList();
         session.close();
 
-        return tweets;
+        List<User> users = new LinkedList<>();
+
+        for(Tuple tuple : result){
+            User user = new User();
+            user.setId((Long)tuple.get(0));
+            user.setUsername((String)tuple.get(1));
+            user.setNickname((String)tuple.get(2));
+
+            users.add(user);
+        }
+        return users;
     }
 
     public List<Tweet> getTweetReplies(Long parentTweetId,int pageCount,int pageSize){

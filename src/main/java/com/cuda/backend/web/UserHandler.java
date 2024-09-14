@@ -4,7 +4,6 @@ import com.cuda.backend.entities.User;
 import com.cuda.backend.services.UserService;
 
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 
@@ -30,32 +29,20 @@ public class UserHandler{
     		response.setStatus(200);
     	}
     }
-
-    @PostMapping(path= "/login/{username}/{password}")
-    public void login(@NotNull @RequestParam String username,@NotNull @RequestParam String password){
-    } 
-
-    @PostMapping(path = "/generate_token")
-    @ResponseStatus(code = HttpStatus.OK)
-    public String generateToken(@PathVariable String username,@PathVariable String password){
-        return "";
-    }
-
+    
     @PostMapping(path = "/register")
     @ResponseStatus(code = HttpStatus.CREATED)
-    public Long register(@Valid @RequestBody User user){
-        log.info("User : "+user.toString());
+    public Long register(@NotNull @RequestParam String username,
+            @NotNull @RequestParam String email,
+            @NotNull @RequestParam String password){
         
-        Long userId = userService.register(user);
-
-        return userId;
+        User user = new User();
+        user.setUsername(username);
+        user.setEmail(email);
+        user.setPassword(password);
+        return userService.register(user);
     }
-
-    // @PutMapping(path = "/update")
-    // public User update(@RequestBody User user){
-    // 	return userService
-    // }
-
+    
     @ResponseStatus(code = HttpStatus.OK)
     @DeleteMapping(path = "/delete")
     public void delete(@NotNull @RequestParam Long id){
@@ -81,12 +68,12 @@ public class UserHandler{
     
     @PostMapping(path = "/followUser")
     public void follow(@NotNull @RequestParam Long followingId,@NotNull @RequestParam Long followerId){
-        userService.follow(followerId,followingId);
+        userService.follow(followingId,followerId);
     }
     
     @PostMapping(path = "/unfollowUser")
     public void unfollow(@NotNull @RequestParam Long followingId,@NotNull @RequestParam Long followerId){
-        userService.follow(followerId,followingId);
+        userService.unfollow(followerId,followingId);
     }
    
     @GetMapping(path = "/getFollowers")

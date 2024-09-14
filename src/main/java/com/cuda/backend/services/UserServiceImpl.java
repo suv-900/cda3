@@ -23,9 +23,7 @@ public class UserServiceImpl extends AbstractService implements UserService{
     private UserRepository userRepository;
 
     public Long register(User user){
-
         userRepository.save(user);
-
         return user.getId();
     }
     
@@ -136,8 +134,8 @@ public class UserServiceImpl extends AbstractService implements UserService{
         return userOptional.isPresent();
     }
 
-    public void follow(Long followerId,Long followingId){
-        userRepository.addFollower(followerId,followingId);
+    public void follow(Long followingId,Long followerId){
+        userRepository.addFollower(followingId,followerId);
     }
 
     public void unfollow(Long followerId,Long followingId){

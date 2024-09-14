@@ -25,7 +25,11 @@ public class TweetServiceImpl extends AbstractService implements TweetService{
     }
     
     public Optional<Tweet> read(Long id){
-        return tweetRepository.getByIdLoadGraph(id);
+        return tweetRepository.findById(id);
+    }
+
+    public Tweet readWithPreferences(Long tweetId,Long userId){
+        return tweetRepository.readWithPreferences(tweetId,userId);
     }
 
     public Tweet update(Tweet tweet){
@@ -36,6 +40,9 @@ public class TweetServiceImpl extends AbstractService implements TweetService{
         tweetRepository.delete(tweet);
     }
 
+    public void deleteAll(){
+        tweetRepository.deleteAll();
+    }
     public void deleteById(Long tweetId){
         tweetRepository.deleteById(tweetId);
     }
@@ -45,11 +52,11 @@ public class TweetServiceImpl extends AbstractService implements TweetService{
     }
 
     public void likeTweet(Long tweetId,Long userId){
-        tweetRepository.likeTweet(tweetId);
+        tweetRepository.likeTweet(tweetId,userId);
     }
     
     public void removeLike(Long tweetId,Long userId){
-        tweetRepository.removeLike(tweetId);
+        tweetRepository.removeLike(tweetId,userId);
     }
 
     public Long replyTweet(Long parentTweetId,Long authorId,Tweet replyTweet){

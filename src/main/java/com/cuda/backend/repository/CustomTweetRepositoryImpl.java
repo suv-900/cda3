@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.query.Query;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,7 @@ import org.springframework.util.Assert;
 
 import com.cuda.backend.entities.Tweet;
 import com.cuda.backend.entities.User;
+import com.cuda.backend.exceptions.RecordNotFoundException;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -30,76 +32,96 @@ public class CustomTweetRepositoryImpl implements CustomTweetRepository{
         Assert.notNull(tweetId,"tweet id cannot be null");
 
         Session session = sessionFactory.openSession();
-
         RootGraph<Tweet> graph = session.createEntityGraph(Tweet.class);
         
-        log.info("Graph: "+graph.toString());
-
         graph.addAttributeNode("author");
         graph.addAttributeNode("replies");
         graph.addSubGraph("replies").addAttributeNode("author");
         
         Optional<Tweet> tweet = session.byId(Tweet.class).withFetchGraph(graph).loadOptional(tweetId);
-        log.info("Tweet: "+tweet);
+
+        session.close();
 
         return tweet;
     }
     
-    // @Transactional
-    // public Long replyTweet(Long parentTweetId,Tweet replyTweet){
-    //     Assert.notNull(parentTweetId,"parent tweetId cannot be null");
+    public Tweet readWithPreferences(Long tweetId,Long userId){
+        Assert.notNull(userId,"user id cannot be null");
+        Assert.notNull(tweetId,"tweet id cannot be null");
 
-    //     Session session = sessionFactory.openSession();
-    //     Optional<Tweet> parentTweetOpt = session.byId(Tweet.class).loadOptional(parentTweetId);
-
-    //     if(parentTweetOpt.isEmpty()){
-    //         throw new RecordNotFoundException("parent tweet doesnt exists");
-    //     }
-
-    //     Tweet parentTweet = parentTweetOpt.get();
-    //     parentTweet.getReplies().add(replyTweet);
-    //     replyTweet.setParentTweet(parentTweet);
-       
-    //     session.persist(replyTweet);
-    //     session.merge(parentTweet);
+        Session session = sessionFactory.openSession();
+        Optional<Tweet> tweetOptional = session.byId(Tweet.class).loadOptional(tweetId);
         
-    //     return replyTweet.getId();
-    // }
+        if(tweetOptional.isEmpty()){
+            session.close();
+            throw new RecordNotFoundException();
+        }
+
+        User user = new User();
+        user.setId(userId);
+
+        Tweet tweet = tweetOptional.get();
+        if(tweet.getUserLikes().contains(user)){
+            tweet.setLikedByUser(true);
+        }
+        
+        session.close();
+        
+        return tweet;
+    }
 
     @Transactional
     public Long replyTweet(Long parentTweetId,Tweet replyTweet){
-        
-        Tweet parentTweet = new Tweet();
-        parentTweet.setId(parentTweetId);
-        replyTweet.setParentTweet(parentTweet);
-        
+        Assert.notNull(parentTweetId,"parent tweetId cannot be null");
+
         Session session = sessionFactory.openSession();
+        Optional<Tweet> parentTweetOpt = session.byId(Tweet.class).loadOptional(parentTweetId);
+
+        if(parentTweetOpt.isEmpty()){
+            throw new RecordNotFoundException("parent tweet doesnt exists");
+        }
+
+        Tweet parentTweet = parentTweetOpt.get();
+        parentTweet.getReplies().add(replyTweet);
+        replyTweet.setParentTweet(parentTweet);
+       
         session.persist(replyTweet);
-        
+        session.merge(parentTweet);
+        session.close();
+
         return replyTweet.getId();
     }
 
     @Transactional
-    public void likeTweet(Long tweetID){
-
-        Assert.notNull(tweetID,"tweet id cannot be null");
-
-        Session session = sessionFactory.getCurrentSession();
-        Optional<Tweet> tweetOptional = session.byId(Tweet.class).loadOptional(tweetID);
-
+    public void likeTweet(Long tweetId,Long userId){
+        Assert.notNull(tweetId,"tweet id cannot be null");
+        Assert.notNull(userId,"user id cannot be null");
+        
+        Session session = sessionFactory.openSession();
+        Transaction tc = session.beginTransaction();
+        
+        Optional<Tweet> tweetOptional = session.byId(Tweet.class).loadOptional(tweetId);
         if(tweetOptional.isEmpty()){
-            throw new EntityNotFoundException();
+            throw new RecordNotFoundException("tweet doesnt exists.");
         }
 
         Tweet tweet = tweetOptional.get();
-        tweet.increaseLikes();
+        User user = new User();
+        user.setId(userId);
+        
+        tweet.addUserToLikes(user);
+        tweet.increaseLikeCount();
 
         session.merge(tweet);
 
+        session.flush();
+        tc.commit();
+        
+        session.close();
     }
     
     @Transactional
-    public void removeLike(Long tweetID){
+    public void removeLike(Long tweetID,Long userId){
 
         Assert.notNull(tweetID,"tweet id cannot be null");
 
@@ -111,10 +133,10 @@ public class CustomTweetRepositoryImpl implements CustomTweetRepository{
         }
 
         Tweet tweet = tweetOptional.get();
-        tweet.decreaseLikes();
+        tweet.decreaseLikeCount();
 
         session.merge(tweet);
-
+        session.close();
     }
 
 
@@ -131,7 +153,10 @@ public class CustomTweetRepositoryImpl implements CustomTweetRepository{
         query.setFirstResult(pageCount);
         query.setMaxResults(pageSize);
 
-        return query.getResultList();
+        List<Tweet> tweets = query.getResultList();
+        session.close();
+
+        return tweets;
     }
 
     public List<Tweet> getUserTweetsOldest(Long authorId,int pageCount,int pageSize){
@@ -147,7 +172,10 @@ public class CustomTweetRepositoryImpl implements CustomTweetRepository{
         query.setFirstResult(pageCount);
         query.setMaxResults(pageSize);
 
-        return query.getResultList();
+        List<Tweet> tweets = query.getResultList();
+        session.close();
+
+        return tweets;
     }
 
     public List<Tweet> getUserTweetsNewest(Long authorId,int pageCount,int pageSize){
@@ -163,7 +191,10 @@ public class CustomTweetRepositoryImpl implements CustomTweetRepository{
         query.setFirstResult(pageCount);
         query.setMaxResults(pageSize);
 
-        return query.getResultList();
+        List<Tweet> tweets = query.getResultList();
+        session.close();
+
+        return tweets;
     }
 
     public List<User> getUsersWhoLikedTweet(Long tweetId,int pageNumber,int pageSize){
@@ -179,8 +210,10 @@ public class CustomTweetRepositoryImpl implements CustomTweetRepository{
         query.setFirstResult(pageNumber);
         query.setFetchSize(pageSize);
 
-        return query.getResultList();
+        List<User> tweets = query.getResultList();
+        session.close();
 
+        return tweets;
     }
 
     public List<Tweet> getTweetReplies(Long parentTweetId,int pageCount,int pageSize){
@@ -196,7 +229,10 @@ public class CustomTweetRepositoryImpl implements CustomTweetRepository{
         query.setFirstResult(pageCount);
         query.setMaxResults(pageSize);
 
-        return query.getResultList();
+        List<Tweet> tweets = query.getResultList();
+        session.close();
+
+        return tweets;
     }
     
     public void insertInBatch(Iterable<Tweet> tweets){

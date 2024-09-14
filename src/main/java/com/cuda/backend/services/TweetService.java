@@ -8,7 +8,9 @@ import com.cuda.backend.entities.User;
 
 public interface TweetService {
    Optional<Tweet> read(Long id);
-   
+  
+   Tweet readWithPreferences(Long tweetId,Long userId);
+
    // Optional<Tweet> read(Long id,Long userId);
   
    List<Tweet> getAll(int pageCount);
@@ -18,6 +20,8 @@ public interface TweetService {
    Tweet update(Tweet tweet);
 
    void delete(Tweet tweet);
+
+   void deleteAll();
 
    void deleteById(Long tweetId);
 

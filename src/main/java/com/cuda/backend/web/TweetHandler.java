@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.cuda.backend.entities.Tweet;
@@ -30,8 +32,8 @@ public class TweetHandler {
     @Autowired 
     private TweetService tweetService;
     
-    @GetMapping(path = "/read")
-    public Tweet getById(@NotNull @RequestParam Long tweetId){
+    @GetMapping(path = "/readTweet")
+    public Tweet readTweet(@NotNull @RequestParam Long tweetId){
         Optional<Tweet> tweet = tweetService.read(tweetId);
 
         if(tweet.isEmpty()){
@@ -41,7 +43,12 @@ public class TweetHandler {
         }
     }
 
-    @PostMapping(path = "/create")
+    @GetMapping(path = "/readTweetWithPreferences")
+    public Tweet readTweetWithPreferences(@NotNull @RequestParam Long tweetId,@NotNull @RequestParam Long userId){
+        return tweetService.readWithPreferences(tweetId,userId);
+    }
+
+    @PostMapping(path = "/createTweet")
     public Tweet createTweet(@Valid @RequestBody Tweet tweet,@NotNull @RequestParam Long authorId){
         User author = new User();
         author.setId(authorId);
@@ -51,19 +58,18 @@ public class TweetHandler {
         return tweetService.save(tweet);
     }
     
-    @DeleteMapping(path = "/delete")
+    @DeleteMapping(path = "/deleteTweet")
     public void delete(@NotNull @RequestParam Long tweetId) {
     	tweetService.deleteById(tweetId);
     }
     
-    @PostMapping(path = "/like_tweet/{tweet_id}")
-    public void likeTweet(@PathVariable(name = "tweet_id")Long tweetId){
-        Long userId = 0L;
+    @PostMapping(path = "/likeTweet")
+    public void likeTweet(@NotNull @RequestParam Long tweetId,@NotNull @RequestParam Long userId){
         tweetService.likeTweet(tweetId,userId);
     }
 
-    @PostMapping(path = "/dislike_tweet/{tweet_id}")
-    public void dislikeTweet(@PathVariable(name = "tweet_id")Long tweetId){
+    @PostMapping(path = "/dislikeTweet")
+    public void dislikeTweet(@NotNull @RequestParam Long tweetId){
         Long userId = 0L;
         tweetService.removeLike(tweetId,userId);
     }
@@ -106,5 +112,11 @@ public class TweetHandler {
     @GetMapping(path = "/getAll")
     public List<Tweet> getAllTweets(@NotNull @RequestParam int pageCount){
         return tweetService.getAll(pageCount);
+    }
+
+    @ResponseStatus(code = HttpStatus.OK)
+    @DeleteMapping(path = "/deleteAll")
+    public void deleteAll(){
+        tweetService.deleteAll();
     }
 }

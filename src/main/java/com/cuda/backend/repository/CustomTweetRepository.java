@@ -8,10 +8,12 @@ import com.cuda.backend.entities.User;
 
 public interface CustomTweetRepository {
     Optional<Tweet> getByIdLoadGraph(Long tweetId);
-   
-    void likeTweet(Long tweetID);
+  
+    Tweet readWithPreferences(Long tweetId,Long userId);
 
-    void removeLike(Long tweetID);
+    void likeTweet(Long tweetID,Long userId);
+
+    void removeLike(Long tweetID,Long userId);
 
     Long replyTweet(Long parentTweetId,Tweet replyTweet);
 

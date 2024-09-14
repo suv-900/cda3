@@ -66,8 +66,8 @@ public class User implements Serializable{
     private boolean emailVerified;
 
     @JsonIgnore
-    @Column(name = "password",nullable = false)
     @NotBlank(message = "password cannot be blank")
+    @Column(name = "password",nullable = false)
     @Basic(fetch=FetchType.LAZY)
     private String password;
    
@@ -97,6 +97,7 @@ public class User implements Serializable{
     @BatchSize(size = 10)
     private List<Tweet> tweets = new ArrayList<>();
 
+    @JsonIgnore
     @CreationTimestamp
     @Column(name="created_at")
     private LocalDateTime createdAt;

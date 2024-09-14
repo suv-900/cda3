@@ -20,9 +20,12 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
@@ -39,9 +42,21 @@ public class Tweet {
     @NonNull
     private String tweet;
 
-    private AtomicLong likes = new AtomicLong();
+    private AtomicLong likeCount = new AtomicLong();
 
     private AtomicLong viewCount = new AtomicLong();
+
+    @Transient
+    private boolean likedByUser;
+
+    @JsonIgnore
+    @JoinTable(
+        name = "tweet_likes",
+        joinColumns = @JoinColumn(name = "tweet_id"),
+        inverseJoinColumns = @JoinColumn(name = "user_id")
+    )
+    @ManyToMany(fetch = FetchType.LAZY)
+    private List<User> userLikes = new ArrayList<>();
 
     @JsonIgnore
     @NonNull
@@ -71,16 +86,16 @@ public class Tweet {
     @Basic(fetch = FetchType.EAGER)
     private LocalDateTime updatedAt;
     
-    public long increaseLikes(){
-        return this.likes.incrementAndGet();
+    public long increaseLikeCount(){
+        return this.likeCount.incrementAndGet();
     }
     
-    public long decreaseLikes(){
-        return this.likes.decrementAndGet();
+    public long decreaseLikeCount(){
+        return this.likeCount.decrementAndGet();
     }
 
-    public long getLikes(){
-        return this.likes.get();
+    public long getLikeCount(){
+        return this.likeCount.get();
     }
 
     public long increaseViewCount(){
@@ -95,6 +110,13 @@ public class Tweet {
         return this.viewCount.get();
     }
     
+    public void addUserToLikes(User user){
+        this.userLikes.add(user);
+    }
+
+    public void removeUserFromLikes(User user){
+        this.userLikes.remove(user);
+    }
 }
 
 //two sessions holding the same object and tries to update counter;

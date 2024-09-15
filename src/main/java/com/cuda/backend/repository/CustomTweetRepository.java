@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.cuda.backend.entities.Tweet;
-import com.cuda.backend.entities.User;
+import com.cuda.backend.entities.dto.UserDTO;
 
 public interface CustomTweetRepository {
     Optional<Tweet> getByIdLoadGraph(Long tweetId);
@@ -20,7 +20,7 @@ public interface CustomTweetRepository {
     List<Tweet> getTweetReplies(Long parentTweetId,int pageCount,int pageSize);
     // void reportTweet(Long tweetID,Long userID)throws Exception;
 
-    List<User> getUsersWhoLikedTweet(Long tweetId,int pageCount,int pageSize);
+    List<UserDTO> getUsersWhoLikedTweet(Long tweetId,int pageCount,int pageSize);
 
     List<Tweet> getUserTweetsOldest(Long userID,int pageCount,int pageSize);
 

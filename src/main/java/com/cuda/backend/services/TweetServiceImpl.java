@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import com.cuda.backend.entities.Tweet;
 import com.cuda.backend.entities.User;
+import com.cuda.backend.entities.dto.UserDTO;
 import com.cuda.backend.repository.TweetRepository;
 
 @Service
@@ -88,7 +89,7 @@ public class TweetServiceImpl extends AbstractService implements TweetService{
         return tweetRepository.getTweetReplies(tweetId,pageCount,pageSize);
     }
     
-    public List<User> getUsersWhoLikedTweet(Long tweetId,int pageCount){
+    public List<UserDTO> getUsersWhoLikedTweet(Long tweetId,int pageCount){
         return tweetRepository.getUsersWhoLikedTweet(tweetId, pageCount, pageSize);
     }
     

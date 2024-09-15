@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.cuda.backend.entities.Tweet;
 import com.cuda.backend.entities.User;
+import com.cuda.backend.entities.dto.UserDTO;
 import com.cuda.backend.exceptions.RecordNotFoundException;
 import com.cuda.backend.services.TweetService;
 
@@ -83,7 +84,7 @@ public class TweetHandler {
     }
 
     @GetMapping(path = "/usersLikedTweet")
-    public List<User> getUsersWhoLikedTweet(@NotNull @RequestParam Long tweetId,@NotNull @RequestParam int pageCount){
+    public List<UserDTO> getUsersWhoLikedTweet(@NotNull @RequestParam Long tweetId,@NotNull @RequestParam int pageCount){
         return tweetService.getUsersWhoLikedTweet(tweetId,pageCount);
     }
 

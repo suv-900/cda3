@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.cuda.backend.entities.Tweet;
-import com.cuda.backend.entities.User;
+import com.cuda.backend.entities.dto.UserDTO;
 
 public interface TweetService {
    Optional<Tweet> read(Long id);
@@ -37,7 +37,7 @@ public interface TweetService {
 
    List<Tweet> getTweetReplies(Long tweetId,int pageCount);
 
-   List<User> getUsersWhoLikedTweet(Long tweetId,int pageCount);
+   List<UserDTO> getUsersWhoLikedTweet(Long tweetId,int pageCount);
    
    // List<Tweet> generateHomeFeed(Long userId,int pageCount);
   

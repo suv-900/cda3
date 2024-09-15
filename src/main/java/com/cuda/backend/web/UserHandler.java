@@ -42,7 +42,13 @@ public class UserHandler{
         user.setPassword(password);
         return userService.register(user);
     }
-    
+   
+    // @ResponseStatus(code = HttpStatus.OK)
+    // @PostMapping(path = "/setNickname")
+    // public void setNickName(@NotNull @RequestParam Long userId,@NotNull @RequestParam String nickName){
+    //     userService.setNickName(userId,nickName);
+    // }
+
     @ResponseStatus(code = HttpStatus.OK)
     @DeleteMapping(path = "/delete")
     public void delete(@NotNull @RequestParam Long id){

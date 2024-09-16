@@ -1,20 +1,20 @@
 package com.cuda.backend.entities.dto;
 
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.List;
+import java.time.LocalDateTime;
+import java.util.concurrent.atomic.AtomicLong;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
+@AllArgsConstructor
 @Getter
 @Setter
 public class TweetDTO {
     Long id;
     String tweet;
     UserDTO author;
-    Long likeCount;
-    Long viewCount;
-    List<TweetDTO> replies = new ArrayList<>();
-    Timestamp updatedAt; 
+    AtomicLong likeCount;
+    AtomicLong viewCount;
+    LocalDateTime updatedAt;
 }

@@ -1,6 +1,7 @@
 package com.cuda.backend.web;
 
 import com.cuda.backend.entities.User;
+import com.cuda.backend.entities.dto.UserDTO;
 import com.cuda.backend.services.UserService;
 
 import jakarta.servlet.http.HttpServletResponse;
@@ -83,12 +84,12 @@ public class UserHandler{
     }
    
     @GetMapping(path = "/getFollowers")
-    public List<User> getFollowers(@NotNull @RequestParam Long userId,@NotNull @RequestParam int pageCount){
+    public List<UserDTO> getFollowers(@NotNull @RequestParam Long userId,@NotNull @RequestParam int pageCount){
         return userService.getFollowers(userId,pageCount);
     }
     
     @GetMapping(path = "/getFollowing")
-    public List<User> getFollowing(@NotNull @RequestParam Long userId,@NotNull @RequestParam int pageCount){
+    public List<UserDTO> getFollowing(@NotNull @RequestParam Long userId,@NotNull @RequestParam int pageCount){
         return userService.getFollowing(userId,pageCount);
     }
     

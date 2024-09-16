@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
 import com.cuda.backend.entities.User;
+import com.cuda.backend.entities.dto.UserDTO;
 import com.cuda.backend.exceptions.RecordNotFoundException;
 import com.cuda.backend.repository.UserRepository;
 
@@ -56,11 +57,11 @@ public class UserServiceImpl extends AbstractService implements UserService{
         return userRepository.findById(id);
     }
 
-    public List<User> getFollowers(Long id,int pageCount){
+    public List<UserDTO> getFollowers(Long id,int pageCount){
         return userRepository.getFollowers(id,pageCount,pageSize);
     }
 
-    public List<User> getFollowing(Long id,int pageCount){
+    public List<UserDTO> getFollowing(Long id,int pageCount){
         return userRepository.getFollowing(id,pageCount,pageSize);
     }
 

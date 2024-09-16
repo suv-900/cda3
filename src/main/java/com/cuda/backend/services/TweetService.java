@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.cuda.backend.entities.Tweet;
+import com.cuda.backend.entities.dto.TweetDTO;
 import com.cuda.backend.entities.dto.UserDTO;
 
 public interface TweetService {
@@ -35,17 +36,17 @@ public interface TweetService {
 
    // void bookMarkTweet(Long tweetId,Long userId);
 
-   List<Tweet> getTweetReplies(Long tweetId,int pageCount);
+   List<TweetDTO> getTweetReplies(Long tweetId,int pageCount);
 
    List<UserDTO> getUsersWhoLikedTweet(Long tweetId,int pageCount);
    
    // List<Tweet> generateHomeFeed(Long userId,int pageCount);
   
-   List<Tweet> getUserTweetsMostLiked(Long userId,int pageCount);
+   List<TweetDTO> getUserTweetsMostLiked(Long userId,int pageCount);
 
-   List<Tweet> getUserTweetsOldest(Long userId,int pageCount);
+   List<TweetDTO> getUserTweetsOldest(Long userId,int pageCount);
 
-   List<Tweet> getUserTweetsNewest(Long userId,int pageCount);
+   List<TweetDTO> getUserTweetsNewest(Long userId,int pageCount);
 
    // List<Tweet> getTrendingTweetsToday(int pageCount);
 

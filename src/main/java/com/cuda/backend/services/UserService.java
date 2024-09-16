@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.cuda.backend.entities.User;
+import com.cuda.backend.entities.dto.UserDTO;
 
 public interface UserService {
 
@@ -37,9 +38,9 @@ public interface UserService {
 
 //    void follow(Long following,Long follower);
 
-    List<User> getFollowers(Long id,int pageCount);
+    List<UserDTO> getFollowers(Long id,int pageCount);
 
-    List<User> getFollowing(Long id,int pageCount);
+    List<UserDTO> getFollowing(Long id,int pageCount);
 
     void follow(Long followerId,Long followingId);
 

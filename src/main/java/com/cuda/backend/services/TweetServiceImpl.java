@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import com.cuda.backend.entities.Tweet;
 import com.cuda.backend.entities.User;
+import com.cuda.backend.entities.dto.TweetDTO;
 import com.cuda.backend.entities.dto.UserDTO;
 import com.cuda.backend.repository.TweetRepository;
 
@@ -85,7 +86,7 @@ public class TweetServiceImpl extends AbstractService implements TweetService{
         return tweetOptional;
     }
 
-    public List<Tweet> getTweetReplies(Long tweetId,int pageCount){
+    public List<TweetDTO> getTweetReplies(Long tweetId,int pageCount){
         return tweetRepository.getTweetReplies(tweetId,pageCount,pageSize);
     }
     
@@ -94,15 +95,15 @@ public class TweetServiceImpl extends AbstractService implements TweetService{
     }
     
     
-    public List<Tweet> getUserTweetsMostLiked(Long userId,int pageCount){
+    public List<TweetDTO> getUserTweetsMostLiked(Long userId,int pageCount){
         return tweetRepository.getUserTweetsMostLiked(userId,pageCount,pageSize);
     }
 
-    public List<Tweet> getUserTweetsOldest(Long userId,int pageCount){
+    public List<TweetDTO> getUserTweetsOldest(Long userId,int pageCount){
         return tweetRepository.getUserTweetsOldest(userId,pageCount,pageSize);
     }
     
-    public List<Tweet> getUserTweetsNewest(Long userId,int pageCount){
+    public List<TweetDTO> getUserTweetsNewest(Long userId,int pageCount){
         return tweetRepository.getUserTweetsNewest(userId,pageCount,pageSize);
     }
     

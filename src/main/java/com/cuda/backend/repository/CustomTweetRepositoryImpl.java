@@ -14,6 +14,7 @@ import org.springframework.util.Assert;
 
 import com.cuda.backend.entities.Tweet;
 import com.cuda.backend.entities.User;
+import com.cuda.backend.entities.dto.TweetDTO;
 import com.cuda.backend.entities.dto.UserDTO;
 import com.cuda.backend.exceptions.RecordNotFoundException;
 
@@ -148,58 +149,69 @@ public class CustomTweetRepositoryImpl implements CustomTweetRepository{
         session.close();
     }
 
-    public List<Tweet> getUserTweetsMostLiked(Long authorId,int pageCount,int pageSize){
+    public List<TweetDTO> getUserTweetsMostLiked(Long authorId,int pageCount,int pageSize){
         Assert.notNull(authorId,"tweet id cannot be null");
         Assert.notNull(pageCount,"page number cannot be null");
         Assert.notNull(pageSize,"page size cannot be null");
 
-        String hql = "from tweet t where t.author.id = :authorId order by t.likes desc";
+        String hql = """
+        select new TweetDTO(t.id,t.tweet,null,t.likeCount,t.viewCount,t.updatedAt)
+        from Tweet t where t.author.id = :authorId order by t.likeCount desc
+        """;
+
         Session session = sessionFactory.openSession();
-        Query<Tweet> query = session.createQuery(hql,Tweet.class);
+        Query<TweetDTO> query = session.createQuery(hql,TweetDTO.class);
         
         query.setParameter("authorId",authorId);
-        query.setFirstResult(pageCount);
+        query.setFirstResult(pageCount * pageSize);
         query.setMaxResults(pageSize);
 
-        List<Tweet> tweets = query.getResultList();
+        List<TweetDTO> tweets = query.getResultList();
         session.close();
 
         return tweets;
     }
 
-    public List<Tweet> getUserTweetsOldest(Long authorId,int pageCount,int pageSize){
+    public List<TweetDTO> getUserTweetsOldest(Long authorId,int pageCount,int pageSize){
         Assert.notNull(authorId,"tweet id cannot be null");
         Assert.notNull(pageCount,"page number cannot be null");
         Assert.notNull(pageSize,"page size cannot be null");
 
-        String hql = "from tweet t where t.author.id = :authorId order by t.createdAt asc";
+        String hql = """
+        select new TweetDTO(t.id,t.tweet,null,t.likeCount,t.viewCount,t.updatedAt)
+        from Tweet t where t.author.id = :authorId order by t.createdAt asc 
+        """;
+                
         Session session = sessionFactory.openSession();
-        Query<Tweet> query = session.createQuery(hql,Tweet.class);
+        Query<TweetDTO> query = session.createQuery(hql,TweetDTO.class);
 
         query.setParameter("authorId",authorId);
-        query.setFirstResult(pageCount);
+        query.setFirstResult(pageCount * pageSize);
         query.setMaxResults(pageSize);
 
-        List<Tweet> tweets = query.getResultList();
+        List<TweetDTO> tweets = query.getResultList();
         session.close();
 
         return tweets;
     }
-
-    public List<Tweet> getUserTweetsNewest(Long authorId,int pageCount,int pageSize){
+    public List<TweetDTO> getUserTweetsNewest(Long authorId,int pageCount,int pageSize){
         Assert.notNull(authorId,"tweet id cannot be null");
         Assert.notNull(pageCount,"page number cannot be null");
         Assert.notNull(pageSize,"page size cannot be null");
+        Assert.isTrue(pageCount < 50,"page count cannot be greater than 50");
 
-        String hql = "from tweet t where t.author.id = :authorId order by t.createdAt desc";
+        String hql = """
+        select new TweetDTO(t.id,t.tweet,null,t.likeCount,t.viewCount,t.updatedAt)
+        from Tweet t where t.author.id = :authorId order by t.createdAt desc        
+        """;
         Session session = sessionFactory.openSession();
-        Query<Tweet> query = session.createQuery(hql,Tweet.class);
+        Query<TweetDTO> query = session.createQuery(hql,TweetDTO.class);
 
         query.setParameter("authorId",authorId);
-        query.setFirstResult(pageCount);
+        query.setFirstResult(pageCount * pageSize);
         query.setMaxResults(pageSize);
 
-        List<Tweet> tweets = query.getResultList();
+        List<TweetDTO> tweets = query.getResultList();
         session.close();
 
         return tweets;
@@ -226,50 +238,27 @@ public class CustomTweetRepositoryImpl implements CustomTweetRepository{
 
         return users;
     }
-    // public List<UserDTO> getUsersWhoLikedTweet(Long tweetId,int pageNumber,int pageSize){
-    //     Assert.notNull(tweetId,"tweet id cannot be null");
-    //     Assert.notNull(pageNumber,"page number cannot be null");
-    //     Assert.notNull(pageSize,"page size cannot be null");
 
-    //     String hql = "select u.id,u.username,u.nickname,u.active from Tweet t join t.userLikes u where t.id = :tweetId";
-    //     Session session = sessionFactory.openSession();
-    //     Query<Tuple> query = session.createQuery(hql,Tuple.class);
-       
-    //     query.setParameter("tweetId",tweetId);
-    //     query.setFirstResult(pageNumber * pageSize);
-    //     query.setMaxResults(pageSize);
-
-    //     List<Tuple> result = query.getResultList();
-    //     session.close();
-
-    //     List<UserDTO> users = new ArrayList<>();
-    //     for(Tuple tuple : result){
-    //         UserDTO user = new UserDTO();
-    //         user.setId((Long)tuple.get(0));
-    //         user.setUsername((String)tuple.get(1));
-    //         user.setNickname((String)tuple.get(2));
-    //         user.setActive((Boolean)tuple.get(3));
-
-    //         users.add(user);
-    //     }
-        
-    //     return users;
-    // }
-
-    public List<Tweet> getTweetReplies(Long parentTweetId,int pageCount,int pageSize){
+    public List<TweetDTO> getTweetReplies(Long parentTweetId,int pageCount,int pageSize){
         Assert.notNull(parentTweetId,"parent tweet id cannot be null");
         Assert.notNull(pageCount,"page number cannot be null");
         Assert.notNull(pageSize,"page size cannot be null");
 
-        String hql = "from tweet t where t.parentTweet.id = :parentTweetId order by t.likes desc";
+        String hql = """
+        select new TweetDTO(t.id,t.tweet,new UserDTO(t.author.id,t.author.username,t.author.nickname,t.author.active),
+        t.likeCount,t.viewCount,t.updatedAt)
+        from Tweet t where t.parentTweet is not null and t.parentTweet.id = :parentTweetId
+        order by t.likeCount desc
+        """;
+          
         Session session = sessionFactory.openSession();
-        Query<Tweet> query = session.createQuery(hql,Tweet.class);
+        Query<TweetDTO> query = session.createQuery(hql,TweetDTO.class);
 
         query.setParameter("parentTweetId",parentTweetId);
-        query.setFirstResult(pageCount);
+        query.setFirstResult(pageCount * pageSize);
         query.setMaxResults(pageSize);
 
-        List<Tweet> tweets = query.getResultList();
+        List<TweetDTO> tweets = query.getResultList();
         session.close();
 
         return tweets;

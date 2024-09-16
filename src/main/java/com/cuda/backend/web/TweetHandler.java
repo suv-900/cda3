@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.cuda.backend.entities.Tweet;
 import com.cuda.backend.entities.User;
+import com.cuda.backend.entities.dto.TweetDTO;
 import com.cuda.backend.entities.dto.UserDTO;
 import com.cuda.backend.exceptions.RecordNotFoundException;
 import com.cuda.backend.services.TweetService;
@@ -79,7 +80,7 @@ public class TweetHandler {
     }
 
     @GetMapping(path = "/tweetReplies")
-    public List<Tweet> getTweetReplies(@NotNull @RequestParam Long tweetId,@NotNull @RequestParam int pageCount){
+    public List<TweetDTO> getTweetReplies(@NotNull @RequestParam Long tweetId,@NotNull @RequestParam int pageCount){
         return tweetService.getTweetReplies(tweetId,pageCount);
     }
 
@@ -89,17 +90,17 @@ public class TweetHandler {
     }
 
     @GetMapping(path = "/userTweets/mostLiked")
-    public List<Tweet> getUserTweetsMostLiked(@NotNull @RequestParam Long userId,@NotNull @RequestParam int pageCount){
+    public List<TweetDTO> getUserTweetsMostLiked(@NotNull @RequestParam Long userId,@NotNull @RequestParam int pageCount){
         return tweetService.getUserTweetsMostLiked(userId,pageCount);
     }
 
     @GetMapping(path = "/userTweets/newest")
-    public List<Tweet> getUserTweetsNewest(@NotNull @RequestParam Long userId,@NotNull @RequestParam int pageCount){
+    public List<TweetDTO> getUserTweetsNewest(@NotNull @RequestParam Long userId,@NotNull @RequestParam int pageCount){
         return tweetService.getUserTweetsNewest(userId,pageCount);
     }
     
     @GetMapping(path = "/userTweets/oldest")
-    public List<Tweet> getUserTweetsOldest(@NotNull @RequestParam Long userId,@NotNull @RequestParam int pageCount){
+    public List<TweetDTO> getUserTweetsOldest(@NotNull @RequestParam Long userId,@NotNull @RequestParam int pageCount){
         return tweetService.getUserTweetsOldest(userId,pageCount);
     }
     
@@ -112,7 +113,9 @@ public class TweetHandler {
     public List<Tweet> getAllTweets(@NotNull @RequestParam int pageCount){
         return tweetService.getAll(pageCount);
     }
-
+    
+    
+    
     @ResponseStatus(code = HttpStatus.OK)
     @DeleteMapping(path = "/deleteAll")
     public void deleteAll(){

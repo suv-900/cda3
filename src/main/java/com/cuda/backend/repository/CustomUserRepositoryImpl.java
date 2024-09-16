@@ -1,6 +1,5 @@
 package com.cuda.backend.repository;
 
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 
@@ -12,9 +11,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.Assert;
 
 import com.cuda.backend.entities.User;
+import com.cuda.backend.entities.dto.UserDTO;
 import com.cuda.backend.exceptions.RecordNotFoundException;
 
-import jakarta.persistence.Tuple;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 
@@ -52,72 +51,57 @@ public class CustomUserRepositoryImpl implements CustomUserRepository {
         return userOpt.get().getPassword();
     }
  
-    public List<User> getFollowers(Long userId,int pageCount,int pageSize){
+    public List<UserDTO> getFollowers(Long userId,int pageCount,int pageSize){
         Assert.notNull(userId,"id cannot be null");
         Assert.notNull(pageCount,"page offset cannot be null");
         Assert.notNull(pageSize,"page size cannot be null");
         Assert.isTrue(pageCount < 50, "page count must not exceed 50");
 
-        User followingUser = new User();
-        followingUser.setId(userId);
+        String hql = """
+        select new UserDTO(u.id,u.username,u.nickname,u.active) from User u 
+        where :user in elements(u.following)
+        """;
+ 
+        User user = new User();
+        user.setId(userId);
 
-        String hql = "select user.id,user.username,user.nickname from User as user where :followingUser in elements(user.following)";
         Session session = sessionFactory.openSession();
-        Query<Tuple> query = session.createQuery(hql,Tuple.class);
+        Query<UserDTO> query = session.createQuery(hql,UserDTO.class);
 
-        query.setParameter("followingUser",followingUser);
+        query.setParameter("user",user);
         query.setFirstResult(pageCount * pageSize);
         query.setMaxResults(pageSize);
 
-        List<Tuple> result = query.getResultList();
+        List<UserDTO> users = query.getResultList();
         session.close();
 
-        List<User> users = new LinkedList<>();
-       
-        //5ms
-        for(Tuple tuple : result){
-            User user = new User();
-            user.setId((Long)tuple.get(0));
-            user.setUsername((String)tuple.get(1));
-            user.setNickname((String)tuple.get(2));
-
-            users.add(user);
-        }
-        
         return users;
     }
 
-    public List<User> getFollowing(Long userId,int pageCount,int pageSize){
+    public List<UserDTO> getFollowing(Long userId,int pageCount,int pageSize){
         Assert.notNull(userId,"id cannot be null");
         Assert.notNull(pageCount,"page offset cannot be null");
         Assert.notNull(pageSize,"page size cannot be null");
         Assert.isTrue(pageCount < 50, "page count must not exceed 100");
 
 
-        User followerUser = new User();
-        followerUser.setId(userId);
+        String hql = """
+        select new UserDTO(u.id,u.username,u.nickname,u.active) from User u
+        where :user in elements(u.followers)
+        """;
+        
+        User user = new User();
+        user.setId(userId);
 
-        String hql = "select u.id,u.username,u.nickname from User u where :followerUser in elemets(u.followers) order by u.followers";
         Session session = sessionFactory.openSession();
-        Query<Tuple> query = session.createQuery(hql,Tuple.class);
+        Query<UserDTO> query = session.createQuery(hql,UserDTO.class);
 
-        query.setParameter("followerUser",followerUser);
+        query.setParameter("user",user);
         query.setFirstResult(pageCount * pageSize);
         query.setMaxResults(pageSize);
 
-        List<Tuple> result = query.getResultList();
+        List<UserDTO> users = query.getResultList();
         session.close();
-
-        List<User> users = new LinkedList<>();
-
-        for(Tuple tuple : result){
-            User user = new User();
-            user.setId((Long)tuple.get(0));
-            user.setUsername((String)tuple.get(1));
-            user.setNickname((String)tuple.get(2));
-
-            users.add(user);
-        }
 
         return users;
     }

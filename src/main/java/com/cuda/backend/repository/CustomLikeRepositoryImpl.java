@@ -6,7 +6,9 @@ import org.hibernate.Transaction;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class CustomLikeRepositoryImpl implements CustomLikeRepository {
    
     @Autowired
@@ -25,5 +27,18 @@ public class CustomLikeRepositoryImpl implements CustomLikeRepository {
 
         tc.commit();
         session.close();
+    }
+
+    public boolean likeExists(Long tweetId,Long userId){
+        String hql = "select 1 from Like l where l.tweet.id = :tweetId and l.user.id = :userId";
+        Session session = sessionFactory.openSession();
+        
+        Integer result = session.createSelectionQuery(hql,Integer.class)
+            .setParameter("tweetId",tweetId)
+            .setParameter("userId",userId)
+            .uniqueResult();
+        session.close();
+       
+        return result == null ? false : true;
     }
 }

@@ -14,6 +14,7 @@ import com.cuda.backend.entities.Tweet;
 import com.cuda.backend.entities.User;
 import com.cuda.backend.entities.dto.TweetDTO;
 import com.cuda.backend.entities.dto.UserDTO;
+import com.cuda.backend.exceptions.RecordNotFoundException;
 import com.cuda.backend.repository.LikeRepository;
 import com.cuda.backend.repository.TweetRepository;
 
@@ -32,12 +33,23 @@ public class TweetServiceImpl extends AbstractService implements TweetService{
         return tweetRepository.save(tweet);
     }
     
-    public Optional<Tweet> read(Long id){
-        return tweetRepository.findById(id);
+    public TweetDTO read(Long tweetId){
+        TweetDTO tweet = tweetRepository.read(tweetId);
+        if(tweet == null){
+            throw new RecordNotFoundException("tweet not found");
+        }else{
+            return tweet;
+        }
     }
 
-    public Tweet readWithPreferences(Long tweetId,Long userId){
-        return tweetRepository.readWithPreferences(tweetId,userId);
+    public TweetDTO readWithPreferences(Long tweetId,Long userId){
+        TweetDTO tweet = read(tweetId);
+        
+        if(likeRepository.likeExists(tweetId,userId)){
+            tweet.setLiked(true);
+        }
+
+        return tweet;
     }
 
     public Tweet update(Tweet tweet){

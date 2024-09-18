@@ -1,7 +1,6 @@
 package com.cuda.backend.web;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -18,7 +17,6 @@ import com.cuda.backend.entities.Tweet;
 import com.cuda.backend.entities.User;
 import com.cuda.backend.entities.dto.TweetDTO;
 import com.cuda.backend.entities.dto.UserDTO;
-import com.cuda.backend.exceptions.RecordNotFoundException;
 import com.cuda.backend.services.TweetService;
 
 import jakarta.validation.Valid;
@@ -33,23 +31,17 @@ public class TweetHandler {
     @Autowired 
     private TweetService tweetService;
     
-    @GetMapping(path = "/readTweet")
-    public Tweet readTweet(@NotNull @RequestParam Long tweetId){
-        Optional<Tweet> tweet = tweetService.read(tweetId);
-
-        if(tweet.isEmpty()){
-            throw new RecordNotFoundException("tweet not found");
-        }else{
-            return tweet.get();
-        }
+    @GetMapping(path = "/read")
+    public TweetDTO readTweet(@NotNull @RequestParam Long tweetId){
+        return tweetService.read(tweetId);
     }
 
-    @GetMapping(path = "/readTweetWithPreferences")
-    public Tweet readTweetWithPreferences(@NotNull @RequestParam Long tweetId,@NotNull @RequestParam Long userId){
+    @GetMapping(path = "/read_with_pref")
+    public TweetDTO readTweetWithPreferences(@NotNull @RequestParam Long tweetId,@NotNull @RequestParam Long userId){
         return tweetService.readWithPreferences(tweetId,userId);
     }
 
-    @PostMapping(path = "/createTweet")
+    @PostMapping(path = "/create")
     public Tweet createTweet(@Valid @RequestBody Tweet tweet,@NotNull @RequestParam Long authorId){
         User author = new User();
         author.setId(authorId);
@@ -59,17 +51,17 @@ public class TweetHandler {
         return tweetService.save(tweet);
     }
     
-    @DeleteMapping(path = "/deleteTweet")
+    @DeleteMapping(path = "/delete")
     public void delete(@NotNull @RequestParam Long tweetId) {
     	tweetService.deleteById(tweetId);
     }
     
-    @PostMapping(path = "/likeTweet")
+    @PostMapping(path = "/like")
     public void likeTweet(@NotNull @RequestParam Long tweetId,@NotNull @RequestParam Long userId){
         tweetService.likeTweet(tweetId,userId);
     }
 
-    @PostMapping(path = "/dislikeTweet")
+    @PostMapping(path = "/dislike")
     public void dislikeTweet(@NotNull @RequestParam Long tweetId,@NotNull @RequestParam Long userId){
         tweetService.removeLike(tweetId,userId);
     }

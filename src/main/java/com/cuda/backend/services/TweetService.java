@@ -1,18 +1,15 @@
 package com.cuda.backend.services;
 
 import java.util.List;
-import java.util.Optional;
 
 import com.cuda.backend.entities.Tweet;
 import com.cuda.backend.entities.dto.TweetDTO;
 import com.cuda.backend.entities.dto.UserDTO;
 
 public interface TweetService {
-   Optional<Tweet> read(Long id);
+   TweetDTO read(Long id);
   
-   Tweet readWithPreferences(Long tweetId,Long userId);
-
-   // Optional<Tweet> read(Long id,Long userId);
+   TweetDTO readWithPreferences(Long tweetId,Long userId);
   
    List<Tweet> getAll(int pageCount);
    

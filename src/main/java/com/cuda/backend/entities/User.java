@@ -9,7 +9,6 @@ import jakarta.validation.constraints.NotBlank;
 
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.LazyGroup;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.NaturalIdCache;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -55,13 +54,11 @@ public class User implements Serializable{
    
     @JsonIgnore
     @NotBlank(message = "email cannot be blank")
-    @LazyGroup("lazy_email_group") 
     @Basic(fetch = FetchType.LAZY)
     private String email;
 
     @JsonIgnore
     @Column(name = "email_verified")
-    @LazyGroup("lazy_email_group")
     @Basic(fetch = FetchType.LAZY)
     private boolean emailVerified;
 
@@ -105,7 +102,6 @@ public class User implements Serializable{
     @JsonIgnore
     @UpdateTimestamp
     @Column(name="updated_at")
-    @Basic(fetch=FetchType.LAZY)
     private LocalDateTime updatedAt;
 
     public synchronized void addFollower(User follower){

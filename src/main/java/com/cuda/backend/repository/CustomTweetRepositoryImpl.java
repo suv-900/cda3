@@ -62,9 +62,9 @@ public class CustomTweetRepositoryImpl implements CustomTweetRepository{
         user.setId(userId);
 
         Tweet tweet = tweetOptional.get();
-        if(tweet.getUserLikes().contains(user)){
-            tweet.setLikedByUser(true);
-        }
+        // if(tweet.getUserLikes().contains(user)){
+        //     tweet.setLikedByUser(true);
+        // }
         
         session.close();
         
@@ -72,80 +72,28 @@ public class CustomTweetRepositoryImpl implements CustomTweetRepository{
     }
 
     @Transactional
-    public Long replyTweet(Long parentTweetId,Tweet replyTweet){
-        Assert.notNull(parentTweetId,"parent tweetId cannot be null");
-
-        Session session = sessionFactory.openSession();
-        Optional<Tweet> parentTweetOpt = session.byId(Tweet.class).loadOptional(parentTweetId);
-
-        if(parentTweetOpt.isEmpty()){
-            throw new RecordNotFoundException("parent tweet doesnt exists");
-        }
-
-        Tweet parentTweet = parentTweetOpt.get();
-        parentTweet.getReplies().add(replyTweet);
-        replyTweet.setParentTweet(parentTweet);
-       
-        session.persist(replyTweet);
-        session.merge(parentTweet);
-        session.close();
-
-        return replyTweet.getId();
-    }
-
-    @Transactional
-    public void likeTweet(Long tweetId,Long userId){
-        Assert.notNull(tweetId,"tweet id cannot be null");
-        Assert.notNull(userId,"user id cannot be null");
-        
+    public void increaseLikeCount(Long tweetId){
+        String hql = "update Tweet t set t.likeCount = t.likeCount + 1 where t.id = :tweetId";
         Session session = sessionFactory.openSession();
         Transaction tc = session.beginTransaction();
-        
-        Optional<Tweet> tweetOptional = session.byId(Tweet.class).loadOptional(tweetId);
-        if(tweetOptional.isEmpty()){
-            session.close();
-            throw new RecordNotFoundException("tweet doesnt exists.");
-        }
 
-        Tweet tweet = tweetOptional.get();
-        User user = new User();
-        user.setId(userId);
-        
-        tweet.addUserToLikes(user);
-        tweet.increaseLikeCount();
+        session.createMutationQuery(hql)
+            .setParameter("tweetId",tweetId)
+            .executeUpdate();
 
-        session.merge(tweet);
-
-        session.flush();
         tc.commit();
-        
         session.close();
     }
    
     @Transactional
-    public void removeLike(Long tweetId,Long userId){
-        Assert.notNull(tweetId,"tweet id cannot be null");
-        Assert.notNull(userId,"user id cannot be null");
-
+    public void decreaseLikeCount(Long tweetId){
+        String hql = "update Tweet t set t.likeCount = t.likeCount - 1 where t.id = :tweetId";
         Session session = sessionFactory.openSession();
         Transaction tc = session.beginTransaction();
-        Optional<Tweet> tweetOptional = session.byId(Tweet.class).loadOptional(tweetId);
-
-        if(tweetOptional.isEmpty()){
-            session.close();
-            throw new RecordNotFoundException("tweet doesnt exists");
-        }
-
-        User user = new User();
-        user.setId(userId);
-        Tweet tweet = tweetOptional.get();
-        tweet.removeUserFromLikes(user);
-        tweet.decreaseLikeCount();
-
-        session.merge(tweet);
-        session.flush();
+        session.createMutationQuery(hql)
+            .setParameter("tweetId",tweetId)
+            .executeUpdate();
         tc.commit();
-
         session.close();
     }
 

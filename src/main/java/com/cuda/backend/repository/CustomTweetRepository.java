@@ -12,11 +12,9 @@ public interface CustomTweetRepository {
   
     Tweet readWithPreferences(Long tweetId,Long userId);
 
-    void likeTweet(Long tweetID,Long userId);
+    void increaseLikeCount(Long tweetID);
 
-    void removeLike(Long tweetID,Long userId);
-
-    Long replyTweet(Long parentTweetId,Tweet replyTweet);
+    void decreaseLikeCount(Long tweetID);
 
     List<TweetDTO> getTweetReplies(Long parentTweetId,int pageCount,int pageSize);
     // void reportTweet(Long tweetID,Long userID)throws Exception;

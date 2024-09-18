@@ -1,5 +1,6 @@
 package com.cuda.backend.web;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -12,7 +13,11 @@ public class GlobalExceptionHandler {
 
     @ResponseStatus(code = HttpStatus.NOT_FOUND)
     @ExceptionHandler(value = {RecordNotFoundException.class})
-    public String handleNotFoundException(RecordNotFoundException e){
+    public String handleNotFoundException(Exception e){
         return e.getMessage();
     }
+
+    @ResponseStatus(code = HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(value = {DataIntegrityViolationException.class})
+    public void handleBadRequest(Exception e){}
 }

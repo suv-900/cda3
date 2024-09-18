@@ -9,11 +9,15 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
+import com.cuda.backend.entities.Like;
 import com.cuda.backend.entities.Tweet;
 import com.cuda.backend.entities.User;
 import com.cuda.backend.entities.dto.TweetDTO;
 import com.cuda.backend.entities.dto.UserDTO;
+import com.cuda.backend.repository.LikeRepository;
 import com.cuda.backend.repository.TweetRepository;
+
+import jakarta.transaction.Transactional;
 
 @Service
 public class TweetServiceImpl extends AbstractService implements TweetService{
@@ -21,6 +25,8 @@ public class TweetServiceImpl extends AbstractService implements TweetService{
     @Autowired
     private TweetRepository tweetRepository;
 
+    @Autowired
+    private LikeRepository likeRepository;
 
     public Tweet save(Tweet tweet){
         return tweetRepository.save(tweet);
@@ -53,21 +59,44 @@ public class TweetServiceImpl extends AbstractService implements TweetService{
         tweetRepository.deleteAllById(tweetIds);
     }
 
+    @Transactional
     public void likeTweet(Long tweetId,Long userId){
-        tweetRepository.likeTweet(tweetId,userId);
+        Tweet tweet = new Tweet();
+        tweet.setId(tweetId);
+        User user = new User();
+        user.setId(userId);
+
+        Like like = new Like();
+        like.setTweet(tweet);
+        like.setUser(user);
+
+        likeRepository.save(like);
+        tweetRepository.increaseLikeCount(tweetId);
     }
     
+    @Transactional
     public void removeLike(Long tweetId,Long userId){
-        tweetRepository.removeLike(tweetId,userId);
-    }
+        Tweet tweet = new Tweet();
+        tweet.setId(tweetId);
+        User user = new User();
+        user.setId(userId);
 
+        Like like = new Like();
+        like.setTweet(tweet);
+        like.setUser(user);
+
+        likeRepository.delete(tweetId,userId);
+        tweetRepository.decreaseLikeCount(tweetId);
+    }
+    
     public Long replyTweet(Long parentTweetId,Long authorId,Tweet replyTweet){
         Tweet parentTweet = new Tweet();
         parentTweet.setId(parentTweetId);
-        replyTweet.setParentTweet(parentTweet);
         
         User author = new User();
         author.setId(authorId);
+        
+        replyTweet.setParentTweet(parentTweet);
         replyTweet.setAuthor(author);
 
         save(replyTweet);

@@ -67,24 +67,44 @@ public class CustomTweetRepositoryImpl implements CustomTweetRepository{
 
         String hql = """
         select new TweetDTO(t.id,t.tweet,new UserDTO(t.author.id,t.author.username,t.author.nickname,t.author.active),
-        t.likeCount,t.viewCount,t.updatedAt)
+        t.likeCount,t.viewCount,t.updatedAt,false)
         from Tweet t where t.parentTweet is not null and t.parentTweet.id = :parentTweetId
         order by t.likeCount desc
         """;
           
         Session session = sessionFactory.openSession();
-        Query<TweetDTO> query = session.createQuery(hql,TweetDTO.class);
+        List<TweetDTO> tweets = session.createSelectionQuery(hql,TweetDTO.class)
+            .setParameter("parentTweetId",parentTweetId)
+            .setFirstResult(pageCount * pageSize)
+            .setMaxResults(pageSize)
+            .getResultList();
 
-        query.setParameter("parentTweetId",parentTweetId);
-        query.setFirstResult(pageCount * pageSize);
-        query.setMaxResults(pageSize);
-
-        List<TweetDTO> tweets = query.getResultList();
         session.close();
 
         return tweets;
     }
-    
+
+    public List<TweetDTO> getTweetRepliesWithUserReactions(Long parentTweetId,Long userId,int pageCount,int pageSize){
+        String hql = """
+        select new TweetDTO(t.id,t.tweet,new UserDTO(t.author.id,t.author.username,t.author.nickname,t.author.active),
+        t.likeCount,t.viewCount,t.updatedAt,l.user is not null and l.user.id = :userId)
+        from Tweet t left join Like l on l.tweet.id = t.id 
+        where t.parentTweet is not null and t.parentTweet.id = :parentTweetId
+        order by t.likeCount desc
+        """;
+       
+        Session session = sessionFactory.openSession();
+        List<TweetDTO> tweets = session.createSelectionQuery(hql,TweetDTO.class)
+            .setParameter("userId",userId)
+            .setParameter("parentTweetId",parentTweetId)
+            .setFirstResult(pageCount * pageSize)
+            .setMaxResults(pageSize)
+            .getResultList();
+        session.close();
+
+        return tweets;
+    }
+
     @Transactional
     public void increaseLikeCount(Long tweetId){
         String hql = "update Tweet t set t.likeCount = t.likeCount + 1 where t.id = :tweetId";

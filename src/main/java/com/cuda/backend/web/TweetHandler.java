@@ -40,7 +40,8 @@ public class TweetHandler {
     public TweetDTO readTweetWithPreferences(@NotNull @RequestParam Long tweetId,@NotNull @RequestParam Long userId){
         return tweetService.readWithPreferences(tweetId,userId);
     }
-
+    
+    
     @PostMapping(path = "/create")
     public Tweet createTweet(@Valid @RequestBody Tweet tweet,@NotNull @RequestParam Long authorId){
         User author = new User();
@@ -74,6 +75,12 @@ public class TweetHandler {
     @GetMapping(path = "/tweetReplies")
     public List<TweetDTO> getTweetReplies(@NotNull @RequestParam Long tweetId,@NotNull @RequestParam int pageCount){
         return tweetService.getTweetReplies(tweetId,pageCount);
+    }
+    
+    @GetMapping(path = "/read_replies_with_pref")
+    public List<TweetDTO> readRepliesWithPreferences(@NotNull @RequestParam Long tweetId,
+        @NotNull @RequestParam Long userId,@NotNull @RequestParam int pageCount){
+        return tweetService.getTweetRepliesWithUserReactions(tweetId,userId,pageCount);
     }
 
     @GetMapping(path = "/usersLikedTweet")

@@ -13,6 +13,8 @@ public interface CustomTweetRepository {
     void decreaseLikeCount(Long tweetID);
 
     List<TweetDTO> getTweetReplies(Long parentTweetId,int pageCount,int pageSize);
+    
+    List<TweetDTO> getTweetRepliesWithUserReactions(Long parentTweetId,Long userId,int pageCount,int pageSize);
 
     List<UserDTO> getUsersWhoLikedTweet(Long tweetId,int pageCount,int pageSize);
 

@@ -10,7 +10,9 @@ public interface TweetService {
    TweetDTO read(Long id);
   
    TweetDTO readWithPreferences(Long tweetId,Long userId);
-  
+ 
+   List<TweetDTO> getTweetRepliesWithUserReactions(Long tweetId,Long userId,int pageCount);
+
    List<Tweet> getAll(int pageCount);
    
    Tweet save(Tweet tweet);

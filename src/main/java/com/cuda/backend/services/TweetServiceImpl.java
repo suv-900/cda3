@@ -130,6 +130,10 @@ public class TweetServiceImpl extends AbstractService implements TweetService{
     public List<TweetDTO> getTweetReplies(Long tweetId,int pageCount){
         return tweetRepository.getTweetReplies(tweetId,pageCount,pageSize);
     }
+
+    public List<TweetDTO> getTweetRepliesWithUserReactions(Long tweetId,Long userId,int pageCount){
+        return tweetRepository.getTweetRepliesWithUserReactions(tweetId,userId,pageCount,pageSize);
+    }
     
     public List<UserDTO> getUsersWhoLikedTweet(Long tweetId,int pageCount){
         return tweetRepository.getUsersWhoLikedTweet(tweetId, pageCount, pageSize);

@@ -17,6 +17,7 @@ import com.cuda.backend.entities.dto.UserDTO;
 import com.cuda.backend.exceptions.RecordNotFoundException;
 import com.cuda.backend.repository.LikeRepository;
 import com.cuda.backend.repository.TweetRepository;
+import com.cuda.backend.repository.UserRepository;
 
 import jakarta.transaction.Transactional;
 
@@ -29,8 +30,14 @@ public class TweetServiceImpl extends AbstractService implements TweetService{
     @Autowired
     private LikeRepository likeRepository;
 
-    public Tweet save(Tweet tweet){
-        return tweetRepository.save(tweet);
+    @Autowired
+    private UserRepository userRepository;
+
+    public Long save(Tweet tweet,Long authorId){
+        tweetRepository.save(tweet);
+        userRepository.increaseTweetCount(authorId);
+        
+        return tweet.getId();
     }
     
     public TweetDTO read(Long tweetId){
@@ -52,9 +59,9 @@ public class TweetServiceImpl extends AbstractService implements TweetService{
         return tweet;
     }
 
-    public Tweet update(Tweet tweet){
-        return save(tweet); 
-    }
+    // public Tweet update(Tweet tweet){
+    //     return save(tweet); 
+    // }
 
     public void delete(Tweet tweet){
         tweetRepository.delete(tweet);
@@ -63,8 +70,9 @@ public class TweetServiceImpl extends AbstractService implements TweetService{
     public void deleteAll(){
         tweetRepository.deleteAll();
     }
-    public void deleteById(Long tweetId){
+    public void deleteById(Long tweetId,Long authorId){
         tweetRepository.deleteById(tweetId);
+        userRepository.decreaseTweetCount(authorId);
     }
 
     public void deleteByIds(List<Long> tweetIds){
@@ -111,7 +119,7 @@ public class TweetServiceImpl extends AbstractService implements TweetService{
         replyTweet.setParentTweet(parentTweet);
         replyTweet.setAuthor(author);
 
-        save(replyTweet);
+        save(replyTweet,authorId);
 
         return replyTweet.getId();
     }

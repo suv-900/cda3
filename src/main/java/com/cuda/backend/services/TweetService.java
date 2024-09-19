@@ -15,15 +15,15 @@ public interface TweetService {
 
    List<Tweet> getAll(int pageCount);
    
-   Tweet save(Tweet tweet);
+   Long save(Tweet tweet,Long authorId);
 
-   Tweet update(Tweet tweet);
+   // Tweet update(Tweet tweet);
 
    void delete(Tweet tweet);
 
    void deleteAll();
 
-   void deleteById(Long tweetId);
+   void deleteById(Long tweetId,Long authorId);
 
    void deleteByIds(List<Long> tweetIds);
 

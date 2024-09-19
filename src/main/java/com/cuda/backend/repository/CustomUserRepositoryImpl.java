@@ -23,18 +23,55 @@ public class CustomUserRepositoryImpl implements CustomUserRepository {
     @Autowired
     private SessionFactory sessionFactory;
 
-    public Optional<User> existsByName(String username){
-        Assert.notNull(username,"username cannot be null");
+    // public Optional<User> existsByName(String username){
+    //     Assert.notNull(username,"username cannot be null");
         
-        Session session = sessionFactory.openSession();
-        Optional<User> user = session.byNaturalId(User.class)
-            .using("username",username).loadOptional();
+    //     Session session = sessionFactory.openSession();
+    //     Optional<User> user = session.byNaturalId(User.class)
+    //         .using("username",username).loadOptional();
 
+    //     session.close();
+    //     return user;
+    // }
+
+    public boolean existsByName(String username){
+        String hql = "select 1 from User u where u.username = :username";
+        Session session = sessionFactory.openSession();
+        Integer result = session.createSelectionQuery(hql,Integer.class)
+            .setParameter("username",username)
+            .uniqueResult();
+        session.close();
+        return result == null?false:true;
+    }
+    
+    public Optional<UserDTO> getByIdDTO(Long userId){
+        String hql = """
+                select new UserDTO(u.id,u.username,u.nickname,u.active,u.bio,u.followerCount,u.followingCount,u.tweetCount) 
+                from User u where u.id = :userId";
+        """;
+        Session session = sessionFactory.openSession();
+        Optional<UserDTO> user = session.createSelectionQuery(hql,UserDTO.class)
+            .setParameter("userId",userId)
+            .uniqueResultOptional();
+        session.close();
+        return user;
+
+    
+    }
+    
+    public Optional<UserDTO> getByNameDTO(String username){
+        String hql = """
+                select new UserDTO(u.id,u.username,u.nickname,u.active,u.bio,u.followerCount,u.followingCount,u.tweetCount) 
+                from User u where u.username = :username
+                """;
+        Session session = sessionFactory.openSession();
+        Optional<UserDTO> user = session.createSelectionQuery(hql,UserDTO.class)
+            .setParameter("username",username)
+            .uniqueResultOptional();
         session.close();
         return user;
     }
 
-    
     public String getUserPassword(String username){
         Assert.notNull(username,"username cannot be null");
         
@@ -58,7 +95,8 @@ public class CustomUserRepositoryImpl implements CustomUserRepository {
         Assert.isTrue(pageCount < 50, "page count must not exceed 50");
 
         String hql = """
-        select new UserDTO(u.id,u.username,u.nickname,u.active) from User u 
+        select new UserDTO(u.id,u.username,u.nickname,u.active,u.bio
+        ,u.followerCount,u.followingCount,u.tweetCount) from User u 
         where :user in elements(u.following)
         """;
  
@@ -84,12 +122,12 @@ public class CustomUserRepositoryImpl implements CustomUserRepository {
         Assert.notNull(pageSize,"page size cannot be null");
         Assert.isTrue(pageCount < 50, "page count must not exceed 100");
 
-
         String hql = """
-        select new UserDTO(u.id,u.username,u.nickname,u.active) from User u
+        select new UserDTO(u.id,u.username,u.nickname,u.active,u.bio
+        ,u.followerCount,u.followingCount,u.tweetCount) from User u 
         where :user in elements(u.followers)
         """;
-        
+       
         User user = new User();
         user.setId(userId);
 
@@ -172,4 +210,73 @@ public class CustomUserRepositoryImpl implements CustomUserRepository {
         session.close();
     }
     
+    @Transactional
+    public void increaseFollowerCount(Long userId){
+        String hql = "update User u set u.followerCount = u.followerCount+1 where u.id = :userId";
+        Session session = sessionFactory.openSession();
+        Transaction tc = session.beginTransaction();
+        session.createMutationQuery(hql)
+            .setParameter("userId",userId)
+            .executeUpdate();
+        session.close();
+        tc.commit();
+    }
+
+    @Transactional
+    public void increaseFollowingCount(Long userId){
+        String hql = "update User u set u.followingCount = u.followingCount+1 where u.id = :userId";
+        Session session = sessionFactory.openSession();
+        Transaction tc = session.beginTransaction();
+        session.createMutationQuery(hql)
+            .setParameter("userId",userId)
+            .executeUpdate();
+        tc.commit();
+        session.close();
+    }
+    @Transactional
+    public void increaseTweetCount(Long userId){
+        String hql = "update User u set u.tweetCount = u.tweetCount+1 where u.id = :userId";
+        Session session = sessionFactory.openSession();
+        Transaction tc = session.beginTransaction();
+        session.createMutationQuery(hql)
+            .setParameter("userId",userId)
+            .executeUpdate();
+        session.close();
+        tc.commit();
+    }
+
+    @Transactional
+    public void decreaseFollowerCount(Long userId){
+        String hql = "update User u set u.followerCount = u.followerCount-1 where u.id = :userId";
+        Session session = sessionFactory.openSession();
+        Transaction tc = session.beginTransaction();
+        session.createMutationQuery(hql)
+            .setParameter("userId",userId)
+            .executeUpdate();
+        session.close();
+        tc.commit();
+    }
+
+    @Transactional
+    public void decreaseFollowingCount(Long userId){
+        String hql = "update User u set u.followingCount = u.followingCount-1 where u.id = :userId";
+        Session session = sessionFactory.openSession();
+        Transaction tc = session.beginTransaction();
+        session.createMutationQuery(hql)
+            .setParameter("userId",userId)
+            .executeUpdate();
+        session.close();
+        tc.commit();
+    }
+    @Transactional
+    public void decreaseTweetCount(Long userId){
+        String hql = "update User u set u.tweetCount = u.tweetCount-1 where u.id = :userId";
+        Session session = sessionFactory.openSession();
+        Transaction tc = session.beginTransaction();
+        session.createMutationQuery(hql)
+            .setParameter("userId",userId)
+            .executeUpdate();
+        session.close();
+        tc.commit();
+    }
 }

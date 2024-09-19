@@ -5,8 +5,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import jakarta.validation.constraints.NotBlank;
-
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.NaturalId;
@@ -44,16 +42,22 @@ public class User implements Serializable{
     private Long id;
   
     @Column(name = "username",nullable = false)
-    @NotBlank(message = "username cannot be blank")
     @NaturalId
     private String username;
     
     private String nickname;
 
+    private String bio;
+
     private boolean active;
-   
+    
+    private long followerCount;
+
+    private long followingCount;
+
+    private long tweetCount;
+
     @JsonIgnore
-    @NotBlank(message = "email cannot be blank")
     @Basic(fetch = FetchType.LAZY)
     private String email;
 
@@ -63,7 +67,6 @@ public class User implements Serializable{
     private boolean emailVerified;
 
     @JsonIgnore
-    @NotBlank(message = "password cannot be blank")
     @Column(name = "password",nullable = false)
     @Basic(fetch=FetchType.LAZY)
     private String password;

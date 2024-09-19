@@ -47,7 +47,8 @@ public class CustomTweetRepositoryImpl implements CustomTweetRepository{
     public TweetDTO read(Long tweetId){
         String hql = """
         select new TweetDTO(t.id,t.tweet,
-        new UserDTO(t.author.id,t.author.username,t.author.nickname,t.author.active),
+        new UserDTO(t.author.id,t.author.username,t.author.nickname,t.author.active,
+        t.author.bio,t.author.followerCount,t.author.followingCount,t.author.tweetCount),
         t.likeCount,t.viewCount,t.updatedAt,false) from Tweet t where t.id = :tweetId
         """;
         
@@ -66,7 +67,8 @@ public class CustomTweetRepositoryImpl implements CustomTweetRepository{
         Assert.notNull(pageSize,"page size cannot be null");
 
         String hql = """
-        select new TweetDTO(t.id,t.tweet,new UserDTO(t.author.id,t.author.username,t.author.nickname,t.author.active),
+        select new TweetDTO(t.id,t.tweet,new UserDTO(t.author.id,t.author.username,t.author.nickname,t.author.active
+        ,t.author.bio,t.author.followerCount,t.author.followingCount,t.author.tweetCount),
         t.likeCount,t.viewCount,t.updatedAt,false)
         from Tweet t where t.parentTweet is not null and t.parentTweet.id = :parentTweetId
         order by t.likeCount desc
@@ -86,7 +88,8 @@ public class CustomTweetRepositoryImpl implements CustomTweetRepository{
 
     public List<TweetDTO> getTweetRepliesWithUserReactions(Long parentTweetId,Long userId,int pageCount,int pageSize){
         String hql = """
-        select new TweetDTO(t.id,t.tweet,new UserDTO(t.author.id,t.author.username,t.author.nickname,t.author.active),
+        select new TweetDTO(t.id,t.tweet,new UserDTO(t.author.id,t.author.username,t.author.nickname,t.author.active
+        ,t.author.bio,t.author.followerCount,t.author.followingCount,t.author.tweetCount),
         t.likeCount,t.viewCount,t.updatedAt,l.user is not null and l.user.id = :userId)
         from Tweet t left join Like l on l.tweet.id = t.id 
         where t.parentTweet is not null and t.parentTweet.id = :parentTweetId
@@ -204,7 +207,8 @@ public class CustomTweetRepositoryImpl implements CustomTweetRepository{
         Assert.notNull(pageSize,"page size cannot be null");
         
         String hql = """
-        select new UserDTO(u.id,u.username,u.nickname,u.active) 
+        select new UserDTO(u.id,u.username,u.nickname,u.active,u.bio,u.followerCount
+        ,u.followingCount,u.tweetCount) 
         from Tweet t join t.userLikes u 
         where t.id = :tweetId """;
         

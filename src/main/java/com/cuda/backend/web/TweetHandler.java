@@ -12,9 +12,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.ModelAndView;
 
 import com.cuda.backend.entities.Tweet;
 import com.cuda.backend.entities.User;
+import com.cuda.backend.entities.dto.TweetCreationDTO;
 import com.cuda.backend.entities.dto.TweetDTO;
 import com.cuda.backend.entities.dto.UserDTO;
 import com.cuda.backend.services.TweetService;
@@ -31,30 +33,38 @@ public class TweetHandler {
     @Autowired 
     private TweetService tweetService;
     
-    @GetMapping(path = "/read")
-    public TweetDTO readTweet(@NotNull @RequestParam Long tweetId){
-        return tweetService.read(tweetId);
+    @GetMapping("/read")
+    public ModelAndView read(@NotNull @RequestParam Long tweetId){
+        TweetDTO tweet = tweetService.read(tweetId);
+        ModelAndView mv = new ModelAndView("tweet");
+        mv.addObject("tweet",tweet);
+        return mv;
     }
 
     @GetMapping(path = "/read_with_pref")
-    public TweetDTO readTweetWithPreferences(@NotNull @RequestParam Long tweetId,@NotNull @RequestParam Long userId){
-        return tweetService.readWithPreferences(tweetId,userId);
+    public ModelAndView readTweetWithPreferences(@NotNull @RequestParam Long tweetId,@NotNull @RequestParam Long userId){
+        TweetDTO tweet = tweetService.readWithPreferences(tweetId,userId);
+        ModelAndView mv = new ModelAndView("tweet");
+        mv.addObject("tweet",tweet);
+        return mv;
     }
     
     
     @PostMapping(path = "/create")
-    public Tweet createTweet(@Valid @RequestBody Tweet tweet,@NotNull @RequestParam Long authorId){
+    public void createTweet(@Valid @RequestBody TweetCreationDTO tweetDto,@NotNull @RequestParam Long authorId){
+        Tweet tweet = new Tweet();
         User author = new User();
         author.setId(authorId);
         
+        tweet.setTweet(tweetDto.getTweet());
         tweet.setAuthor(author);
         
-        return tweetService.save(tweet);
+        tweetService.save(tweet,authorId);
     }
     
     @DeleteMapping(path = "/delete")
-    public void delete(@NotNull @RequestParam Long tweetId) {
-    	tweetService.deleteById(tweetId);
+    public void delete(@NotNull @RequestParam Long tweetId,@NotNull @RequestParam Long authorId) {
+    	tweetService.deleteById(tweetId,authorId);
     }
     
     @PostMapping(path = "/like")

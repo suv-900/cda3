@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+    <body>
+       <div th:object="${tweet}">
+        <div>
+            <span th:text="*{author.nickname}"></span>@<span th:text="*{author.username}"></span>
+        </div>
+        <div>
+            <p><span th:text="*{tweet}"></span></p>
+            <p><span th:text="*{likeCount}"></span> likes</p>
+            <p><span th:text="*{viewCount}"></span> views</p>
+            <p>last updated at <span th:text="*{updatedAt}"></span></p>
+        </div>
+       </div> 
+    </body>
+</html>

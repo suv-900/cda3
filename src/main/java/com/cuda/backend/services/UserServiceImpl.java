@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
 import com.cuda.backend.entities.User;
+import com.cuda.backend.entities.dto.UserCreationDTO;
 import com.cuda.backend.entities.dto.UserDTO;
 import com.cuda.backend.exceptions.RecordNotFoundException;
 import com.cuda.backend.repository.UserRepository;
@@ -23,13 +24,29 @@ public class UserServiceImpl extends AbstractService implements UserService{
     @Autowired
     private UserRepository userRepository;
 
-    public Long register(User user){
+    public void register(UserCreationDTO userDto){
+        User user = new User();
+        user.setUsername(userDto.getUsername());
+        user.setNickname(userDto.getUsername());
+        user.setEmail(userDto.getEmail());
+        user.setPassword(userDto.getPassword());
+        user.setBio(userDto.getBio());
         userRepository.save(user);
-        return user.getId();
+    } 
+    
+    public void follow(Long followingId,Long followerId){
+        userRepository.addFollower(followingId,followerId);
+        userRepository.increaseFollowerCount(followingId);
+        userRepository.increaseFollowingCount(followerId);
+    }
+
+    public void unfollow(Long followerId,Long followingId){
+        userRepository.removeFollower(followerId,followingId);
+        userRepository.decreaseFollowerCount(followingId);
+        userRepository.decreaseFollowingCount(followerId);
     }
     
     public void login(String username,String password){
-
     }
 
     public void logout(Long id){
@@ -53,10 +70,24 @@ public class UserServiceImpl extends AbstractService implements UserService{
         userRepository.deleteAll();
     }
 
-    public Optional<User> getById(Long id){
-        return userRepository.findById(id);
+    public UserDTO getById(Long id){
+        Optional<UserDTO> userOpt = userRepository.getByIdDTO(id);
+        if(userOpt.isEmpty()){
+            throw new RecordNotFoundException("user not found");
+        }else{
+            return userOpt.get();
+        }
     }
-
+    
+    public UserDTO getByName(String username){
+        Optional<UserDTO> userOpt = userRepository.getByNameDTO(username);
+        if(userOpt.isEmpty()){
+            throw new RecordNotFoundException("user not found");
+        }else{
+            return userOpt.get();
+        }
+    }
+    
     public List<UserDTO> getFollowers(Long id,int pageCount){
         return userRepository.getFollowers(id,pageCount,pageSize);
     }
@@ -135,13 +166,11 @@ public class UserServiceImpl extends AbstractService implements UserService{
         return userOptional.isPresent();
     }
 
-    public void follow(Long followingId,Long followerId){
-        userRepository.addFollower(followingId,followerId);
-    }
+    // public boolean existsByName(String username){
+    //     return userRepository.existsByName(username);
+    // }
 
-    public void unfollow(Long followerId,Long followingId){
-        userRepository.removeFollower(followerId,followingId);
-    }
+    
 
     public List<User> getAll(){
         return userRepository.findAll();

@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html xmlns:th = "http://www.thymeleaf.org">
+    <body>
+        <h1>user.</h1>
+        <div th:object="${user}">
+            <p>id: <span th:text="*{id}"></span></p>
+            <p>username: <span th:text="*{username}"></span></p>
+            <p>nickname: <span th:text="*{nickname}"></span></p>
+            <p>active: <span th:text="*{active}"></span></p>
+            <p><span th:text="*{followerCount}"></span> followers</p>
+            <p><span th:text="*{followingCount}"></span> following</p>
+            <p><span th:text="*{tweetCount}"></span> tweets</p>
+        </div>
+    </body>
+</html>

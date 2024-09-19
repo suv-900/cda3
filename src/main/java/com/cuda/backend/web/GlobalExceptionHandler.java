@@ -17,7 +17,7 @@ public class GlobalExceptionHandler {
         return e.getMessage();
     }
 
-    @ResponseStatus(code = HttpStatus.BAD_REQUEST)
+    @ResponseStatus(code = HttpStatus.CONFLICT)
     @ExceptionHandler(value = {DataIntegrityViolationException.class})
     public void handleBadRequest(Exception e){}
 }
